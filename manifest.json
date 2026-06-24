@@ -1,0 +1,13 @@
+{
+  "project": "luxury-perfume-mpesa",
+  "version": "1.0.0",
+  "generated_at": "2026-06-22T20:01:18.530324",
+  "total_files": 45,
+  "chunks": [
+    "Chunk 1: Directory Layout & Python Backend (M-Pesa OAuth + STK Push)",
+    "Chunk 2: Python Callback Endpoint & Transaction State Management",
+    "Chunk 3: React Router & Global Glassmorphic Layout Theme",
+    "Chunk 4: Luxury Landing Hero & Product Showcase Matrix",
+    "Chunk 5: M-Pesa Checkout Panel & Automated Packaging"
+  ]
+}
