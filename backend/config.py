@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     MPESA_SHORTCODE: str = Field(default="174379", env="MPESA_SHORTCODE")
     MPESA_ENV: str = Field(default="sandbox", env="MPESA_ENV")
     MPESA_MOCK_MODE: bool = Field(default=False, env="MPESA_MOCK_MODE")
+    DATABASE_URL: str = Field(default="", env="DATABASE_URL")
+    SECRET_KEY: str = Field(default="secret", env="SECRET_KEY")
 
     @property
     def BASE_URL(self) -> str:
