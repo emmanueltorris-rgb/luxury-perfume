@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from backend.config import get_settings
 from backend.routes import payments
+from backend.database import Base, engine
+from backend.models import product, order, customer, admin, user
 
 settings = get_settings()
 
@@ -20,6 +22,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup():
+    Base.metadata.create_all(bind=engine)
 
 app.include_router(payments.router)
 
