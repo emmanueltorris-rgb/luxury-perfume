@@ -1,0 +1,10 @@
+backend/.env
+frontend/.env
+__pycache__/
+*.pyc
+backend/venv/
+venv/
+.env
+.vscode/
+.idea/
+*.log
