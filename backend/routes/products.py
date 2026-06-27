@@ -1,17 +1,9 @@
-<<<<<<< HEAD
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
-=======
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from backend.database import get_db
 from backend.models.product import Product
-<<<<<<< HEAD
-from backend.auth_utils import get_current_user
-from backend.cloudinary import upload_image
-=======
 from backend.auth_utils import get_current_user, admin_required
 import os
 from pathlib import Path
@@ -19,7 +11,6 @@ from shutil import copyfileobj
 
 UPLOAD_DIR = Path(__file__).resolve().parents[2] / 'static' / 'uploads'
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
 
 
 router = APIRouter(
@@ -89,53 +80,6 @@ def get_product(
             detail="Product not found"
         )
     return product
-<<<<<<< HEAD
-# ADMIN ONLY - Create product
-@router.post("/")
-def create_product(
-    name: str = Form(...),
-    brand: str = Form(...),
-    description: Optional[str] = Form(None),
-    price: float = Form(...),
-    stock: int = Form(...),
-    size_ml: Optional[int] = Form(None),
-    category: Optional[str] = Form(None),
-    image: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-
-):
-    if current_user["role"] != "admin":
-        raise HTTPException(
-            status_code=403,
-            detail="Admin access required"
-        )
-    image_url = upload_image(
-        image.file
-    )
-
-    product = Product(
-        name=name,
-        brand=brand,
-        description=description,
-        price=price,
-        stock=stock,
-        size_ml=size_ml,
-        category=category,
-        image_url=image_url
-    )
-
-    db.add(product)
-    db.commit()
-    db.refresh(product)
-    return product
-
-# ADMIN ONLY - Full update
-@router.put("/{product_id}")
-def update_product(
-    product_id: int,
-    data: ProductUpdate,
-=======
 
 
 
@@ -195,48 +139,7 @@ def update_product(
     size_ml: Optional[int] = Form(None),
     category: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
     db: Session = Depends(get_db),
-):
-<<<<<<< HEAD
-    if current_user["role"] != "admin":
-        raise HTTPException(
-            status_code=403,
-            detail="Admin access required"
-        )
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
-=======
-
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
-
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
-    if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-<<<<<<< HEAD
-    for key, value in data.model_dump().items():
-        setattr(
-            product,
-            key,
-            value
-        )
-    db.commit()
-    db.refresh(product)
-    return product
-
-# ADMIN ONLY - Partial update
-@router.patch("/{product_id}")
-def patch_product(
-    product_id: int,
-    data: ProductPatch,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
 ):
     if current_user["role"] != "admin":
         raise HTTPException(
@@ -251,16 +154,6 @@ def patch_product(
             status_code=404,
             detail="Product not found"
         )
-    updates = data.model_dump(
-        exclude_unset=True
-    )
-    for key, value in updates.items():
-        setattr(
-            product,
-            key,
-            value
-        )
-=======
 
     if name is not None:
         product.name = name
@@ -287,33 +180,24 @@ def patch_product(
         with target.open('wb') as f:
             copyfileobj(image.file, f)
         product.image_url = f"/static/uploads/{filename}"
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
 
     db.commit()
     db.refresh(product)
 
     return product
 
-<<<<<<< HEAD
-# ADMIN ONLY - Soft delete
-@router.delete("/{product_id}")
-=======
 
 
 @router.delete("/{product_id}", dependencies=[Depends(admin_required)])
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
 ):
-<<<<<<< HEAD
     if current_user["role"] != "admin":
         raise HTTPException(
             status_code=403,
             detail="Admin access required"
         )
-=======
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
 
     product = db.query(Product).filter(
         Product.id == product_id
@@ -324,16 +208,8 @@ def delete_product(
             status_code=404,
             detail="Product not found"
         )
-<<<<<<< HEAD
-=======
-
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
     product.is_active = False
     db.commit()
-<<<<<<< HEAD
-=======
-
->>>>>>> 90f5cf2682d01ce953f5fda641cddce93bf3f380
     return {
         "message": "Product deleted"
     }
