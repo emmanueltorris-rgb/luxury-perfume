@@ -5,9 +5,10 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
-# Load .env file explicitly from backend directory
+
 backend_dir = Path(__file__).resolve().parent
 env_file = backend_dir / ".env"
+
 load_dotenv(env_file)
 
 class Settings(BaseSettings):
@@ -19,6 +20,10 @@ class Settings(BaseSettings):
     MPESA_MOCK_MODE: bool = Field(default=False, env="MPESA_MOCK_MODE")
     DATABASE_URL: str = Field(default="", env="DATABASE_URL")
     SECRET_KEY: str = Field(default="secret", env="SECRET_KEY")
+    CLOUDINARY_CLOUD_NAME: str = Field(default="",env="CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY: str = Field(default="", env="CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET: str = Field(default="",env="CLOUDINARY_API_SECRET")
+
 
     @property
     def BASE_URL(self) -> str:
@@ -27,10 +32,15 @@ class Settings(BaseSettings):
             if self.MPESA_ENV == "sandbox"
             else "https://api.safaricom.co.ke"
         )
-
     APP_NAME: str = "Luxury Perfume E-Commerce"
-    DEBUG: bool = Field(default=False, env="DEBUG")
-    CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
+    DEBUG: bool = Field(
+        default=False,
+        env="DEBUG"
+    )
+    CORS_ORIGINS: list = [
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ]
 
     class Config:
         env_file = str(env_file)
