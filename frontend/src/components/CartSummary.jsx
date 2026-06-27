@@ -4,7 +4,7 @@ import { ShoppingBag, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function CartSummary() {
-  const { items, removeItem, total, count } = useCart()
+  const { items, removeItem, updateItemQuantity, clearCart, total, count } = useCart()
 
   if (items.length === 0) {
     return (
@@ -50,7 +50,23 @@ function CartSummary() {
                 <p className="text-sm font-mono text-luxury-gold">
                   {formatPrice(item.price * item.quantity)}
                 </p>
-                <p className="text-xs text-white/30">Qty: {item.quantity}</p>
+                <div className="mt-2 flex items-center justify-end gap-2 text-xs text-white/40">
+                  <button
+                    type="button"
+                    onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
+                    className="h-7 w-7 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
+                    className="h-7 w-7 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <button
@@ -80,6 +96,13 @@ function CartSummary() {
             {formatPrice(total)}
           </span>
         </div>
+        <button
+          type="button"
+          onClick={clearCart}
+          className="mt-5 w-full rounded-xl bg-white/5 py-3 text-sm text-white/60 hover:bg-white/10 transition-colors"
+        >
+          Clear Cart
+        </button>
       </div>
     </div>
   )
