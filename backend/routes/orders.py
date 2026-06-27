@@ -5,6 +5,8 @@ from typing import List
 
 from backend.database import get_db
 from backend.models.order import Order
+from backend.models.order_item import OrderItem
+from backend.models.product import Product
 from backend.auth_utils import get_current_user
 from backend.models.user import User
 
@@ -15,9 +17,14 @@ router = APIRouter(
 )
 
 
+class OrderItemCreate(BaseModel):
+    product_id: int
+    quantity: int
+
+
 class OrderCreate(BaseModel):
-    product_ids: List[int]
-    total: float
+    items: List[OrderItemCreate]
+
 
 
 # Create order - User must be logged in
@@ -32,23 +39,66 @@ def create_order(
         User.email == current_user["email"]
     ).first()
 
+
     if not user:
         raise HTTPException(
             status_code=404,
             detail="User not found"
         )
 
+
     order = Order(
         customer_id=user.id,
-        total=data.total,
+        total=0,
         status="pending"
     )
+
 
     db.add(order)
     db.commit()
     db.refresh(order)
 
+
+    total = 0
+
+
+    for item in data.items:
+
+        product = db.query(Product).filter(
+            Product.id == item.product_id
+        ).first()
+
+
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail="Product not found"
+            )
+
+
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            quantity=item.quantity,
+            price=product.price
+        )
+
+
+        total += product.price * item.quantity
+
+
+        db.add(order_item)
+
+
+    order.total = total
+
+
+    db.commit()
+    db.refresh(order)
+
+
     return order
+
 
 
 # View logged-in user's orders
@@ -62,17 +112,11 @@ def my_orders(
         User.email == current_user["email"]
     ).first()
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
 
-    orders = db.query(Order).filter(
+    return db.query(Order).filter(
         Order.customer_id == user.id
     ).all()
 
-    return orders
 
 
 # Admin - view all orders
@@ -88,10 +132,12 @@ def all_orders(
             detail="Admin access required"
         )
 
+
     return db.query(Order).all()
 
 
-# Update order status (Admin only)
+
+# Update order status
 @router.put("/{order_id}/status")
 def update_status(
     order_id: int,
@@ -106,9 +152,11 @@ def update_status(
             detail="Admin access required"
         )
 
+
     order = db.query(Order).filter(
         Order.id == order_id
     ).first()
+
 
     if not order:
         raise HTTPException(
@@ -116,10 +164,11 @@ def update_status(
             detail="Order not found"
         )
 
+
     order.status = status
 
     db.commit()
-    db.refresh(order)
+
 
     return {
         "message": f"Order status updated to {status}"
