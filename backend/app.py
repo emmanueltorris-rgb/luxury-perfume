@@ -9,6 +9,8 @@ from backend.models.user import User
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+
+
 settings = get_settings()
 
 app = FastAPI(
@@ -53,7 +55,7 @@ app.include_router(orders.router)
 app.include_router(payments.router)
 
 # Serve uploaded images
-static_path = Path(__file__).resolve().parents[0] / 'static'
+static_path = Path(__file__).resolve().parents[1] / 'static'
 static_path.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 

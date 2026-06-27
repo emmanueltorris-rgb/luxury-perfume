@@ -14,6 +14,12 @@ function ProductCard({ product, index }) {
     setTimeout(() => setAdded(false), 2000)
   }
 
+  const getImageUrl = (url) => {
+    if (!url) return null
+    if (url.startsWith('/static')) return `http://localhost:8000${url}`
+    return url
+  }
+
   return (
     <motion.div
       className="group relative"
@@ -25,17 +31,33 @@ function ProductCard({ product, index }) {
       <div className="liquid-glass rounded-2xl overflow-hidden transition-all duration-500 group-hover:glow-gold">
         <div className="relative h-64 overflow-hidden bg-gradient-to-br from-emerald-900/50 to-amber-900/30">
           <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              className="w-32 h-32 rounded-full opacity-40"
-              style={{
-                background: `radial-gradient(circle, ${product.category === 'Oriental' ? 'rgba(212,175,55,0.4)' : product.category === 'Woody' ? 'rgba(120,53,15,0.5)' : 'rgba(16,185,129,0.3)'} 0%, transparent 70%)`,
-              }}
-              whileHover={{ scale: 1.2 }}
-              transition={{ duration: 0.4 }}
-            />
-            <span className="absolute font-serif text-6xl text-white/10 select-none">
-              {product.name.charAt(0)}
-            </span>
+            {getImageUrl(product.image_url) ? (
+              <img
+                src={getImageUrl(product.image_url)}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <>
+                <motion.div
+                  className="w-32 h-32 rounded-full opacity-40"
+                  style={{
+                    background: `radial-gradient(circle, ${
+                      product.category === 'Oriental'
+                        ? 'rgba(212,175,55,0.4)'
+                        : product.category === 'Woody'
+                        ? 'rgba(120,53,15,0.5)'
+                        : 'rgba(16,185,129,0.3)'
+                    } 0%, transparent 70%)`,
+                  }}
+                  whileHover={{ scale: 1.2 }}
+                  transition={{ duration: 0.4 }}
+                />
+                <span className="absolute font-serif text-6xl text-white/10 select-none">
+                  {product.name.charAt(0)}
+                </span>
+              </>
+            )}
           </div>
 
           {product.badge && (
@@ -78,7 +100,7 @@ function ProductCard({ product, index }) {
               <span className="font-serif text-2xl text-luxury-gold font-bold">
                 {formatPrice(product.price)}
               </span>
-              <span className="text-xs text-white/30 ml-2">/ {product.volume || '100ml'}</span>
+              <span className="text-xs text-white/30 ml-2">/ {product.volume || product.size_ml ? `${product.size_ml}ml` : '100ml'}</span>
             </div>
 
             <motion.button
