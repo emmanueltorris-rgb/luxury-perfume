@@ -56,14 +56,14 @@ function ProductCard({ product, index }) {
             {product.name}
           </h3>
           <p className="text-xs uppercase tracking-widest text-white/40 mb-3">
-            {product.tagline}
+            {product.tagline || product.brand || 'Signature Scent'}
           </p>
           <p className="text-sm text-white/50 leading-relaxed mb-4 line-clamp-2">
             {product.description}
           </p>
 
           <div className="flex flex-wrap gap-2 mb-5">
-            {Object.entries(product.notes).map(([key, note]) => (
+            {Object.entries(product.notes || {}).map(([key, note]) => (
               <span
                 key={key}
                 className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-white/40 border border-white/5"
@@ -78,7 +78,7 @@ function ProductCard({ product, index }) {
               <span className="font-serif text-2xl text-luxury-gold font-bold">
                 {formatPrice(product.price)}
               </span>
-              <span className="text-xs text-white/30 ml-2">/ {product.volume}</span>
+              <span className="text-xs text-white/30 ml-2">/ {product.volume || '100ml'}</span>
             </div>
 
             <motion.button

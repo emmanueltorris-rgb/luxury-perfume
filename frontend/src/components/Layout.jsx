@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import Navigation from './Navigation'
 import Footer from './Footer'
+import Toast from './Toast'
 import AmbientBackground from './AmbientBackground'
 
 function Layout() {
@@ -12,6 +13,7 @@ function Layout() {
       <main className="relative z-10">
         <Outlet />
       </main>
+      <Toast />
       <Footer />
     </div>
   )
