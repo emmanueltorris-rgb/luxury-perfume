@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingBag, Menu, X, Droplets } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { cn } from '../lib/utils'
+import { useAuth } from '../context/AuthContext'
 
 function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const { count } = useCart()
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,6 +86,23 @@ function Navigation() {
               )}
             </Link>
           ))}
+          {/* Admin link + auth actions */}
+          {user && user.role === 'admin' && (
+            <>
+              <Link to="/admin" className="px-5 py-2 rounded-lg text-sm font-medium text-luxury-gold bg-white/5">
+                Admin
+              </Link>
+              <button onClick={() => logout()} className="px-4 py-2 rounded-lg text-sm bg-white/5">Logout</button>
+            </>
+          )}
+
+          {user && user.role !== 'admin' && (
+            <button onClick={() => logout()} className="px-4 py-2 rounded-lg text-sm bg-white/5">Logout</button>
+          )}
+
+          {!user && (
+            <Link to="/login" className="px-4 py-2 rounded-lg text-sm bg-white/5">Login</Link>
+          )}
         </nav>
 
         <button
@@ -127,6 +146,24 @@ function Navigation() {
                 </Link>
               ))}
             </nav>
+            <div className="p-4 border-t border-white/5">
+              {user && user.role === 'admin' && (
+                <div className="flex items-center gap-2">
+                  <Link to="/admin" className="px-4 py-2 rounded bg-white/5">Admin</Link>
+                  <button onClick={() => { logout(); setIsMobileMenuOpen(false) }} className="px-4 py-2 rounded bg-white/5">Logout</button>
+                </div>
+              )}
+
+              {user && user.role !== 'admin' && (
+                <div>
+                  <button onClick={() => { logout(); setIsMobileMenuOpen(false) }} className="px-4 py-2 rounded bg-white/5">Logout</button>
+                </div>
+              )}
+
+              {!user && (
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-2 rounded bg-white/5">Login</Link>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

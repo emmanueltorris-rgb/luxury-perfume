@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { usePayment } from '../hooks/usePayment'
@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom'
 import PhoneInput from '../components/PhoneInput'
 import PaymentStatus from '../components/PaymentStatus'
 import CartSummary from '../components/CartSummary'
+import { useToast } from '../context/ToastContext'
 
 function CheckoutPage() {
   const { items, total, count } = useCart()
@@ -23,6 +24,7 @@ function CheckoutPage() {
     initiatePayment,
     reset,
   } = usePayment()
+  const { showToast } = useToast()
 
   const [phone, setPhone] = useState('')
   const [agreed, setAgreed] = useState(false)
@@ -34,11 +36,21 @@ function CheckoutPage() {
     if (!canSubmit) return
 
     try {
-      await initiatePayment(phone, total, items.map(i => i.id).join(','))
+      await initiatePayment(phone, total, items.map((i) => i.id).join(','))
     } catch (err) {
       console.error('Payment error:', err)
     }
   }
+
+  useEffect(() => {
+    if (!message) return
+    if (status === 'success') {
+      showToast(message, 'success')
+    }
+    if (status === 'failed' || status === 'cancelled' || status === 'timeout') {
+      showToast(message || error || 'Payment did not complete.', 'error')
+    }
+  }, [status, message, error, showToast])
 
   if (isSuccess) {
     return (

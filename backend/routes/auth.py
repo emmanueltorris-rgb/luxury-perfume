@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 
 from backend.database import get_db
-from backend.models.admin import Admin
 from backend.models.user import User
 from backend.config import get_settings
 
@@ -58,8 +58,8 @@ class LoginRequest(BaseModel):
 class RegisterRequest(BaseModel):
     name: str
     email: str
-    phone: str
     password: str
+    phone: Optional[str] = None
 
 
 
@@ -68,11 +68,10 @@ def admin_login(
     request: LoginRequest,
     db: Session = Depends(get_db)
 ):
-
-    admin = db.query(Admin).filter(
-        Admin.email == request.email
+    admin = db.query(User).filter(
+        User.email == request.email,
+        User.role == 'admin'
     ).first()
-
 
     if not admin or not verify_password(
         request.password,
@@ -83,12 +82,10 @@ def admin_login(
             detail="Invalid credentials"
         )
 
-
     token = create_token({
         "sub": admin.email,
         "role": "admin"
     })
-
 
     return {
         "access_token": token,
@@ -102,40 +99,40 @@ def register_user(
     request: RegisterRequest,
     db: Session = Depends(get_db)
 ):
-
     existing_user = db.query(User).filter(
         User.email == request.email
     ).first()
 
-
-    existing_admin = db.query(Admin).filter(
-        Admin.email == request.email
-    ).first()
-
-
-    if existing_user or existing_admin:
+    if existing_user:
         raise HTTPException(
             status_code=400,
             detail="Email already registered"
         )
 
-
     user = User(
         name=request.name,
         email=request.email,
         phone=request.phone,
-        hashed_password=hash_password(request.password)
+        hashed_password=hash_password(request.password),
+        role='user'
     )
-
 
     db.add(user)
     db.commit()
     db.refresh(user)
 
-
     return {
         "message": "Account created successfully"
     }
+
+
+
+@router.post("/signup")
+def signup_user(
+    request: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+    return register_user(request, db)
 
 
 
@@ -162,7 +159,7 @@ def user_login(
 
     token = create_token({
         "sub": user.email,
-        "role": "user"
+        "role": user.role or "user"
     })
 
 
