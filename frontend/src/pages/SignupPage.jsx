@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext'
 export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { signup } = useAuth()
@@ -16,7 +17,7 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await signup({ name, email, password })
+      await signup({ name, email, phone, password })
       showToast('Registration successful! Please log in.', 'success')
       navigate('/login')
     } catch (err) {
@@ -54,6 +55,16 @@ export default function SignupPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                className="mt-2 w-full rounded-3xl border border-[#FFD29D] bg-[#FDFBF7] px-4 py-3 text-[#2B1E19] outline-none transition focus:border-[#FF7F62]"
+              />
+            </div>
+            <div>
+                <label className="text-sm font-medium text-[#5B463F]">Phone</label>
+              <input
+                type="number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
                 className="mt-2 w-full rounded-3xl border border-[#FFD29D] bg-[#FDFBF7] px-4 py-3 text-[#2B1E19] outline-none transition focus:border-[#FF7F62]"
               />

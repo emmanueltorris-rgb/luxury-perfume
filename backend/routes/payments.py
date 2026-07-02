@@ -3,10 +3,10 @@ import json
 import re
 import logging
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks
+from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks,Depends
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
-
+from backend.auth_utils import get_current_user, admin_required
 from backend.services.mpesa import mpesa_service
 from backend.services.mock_mpesa import mock_mpesa_service
 from backend.services.callback_handler import callback_handler
@@ -65,6 +65,7 @@ class TransactionStatusResponse(BaseModel):
 async def initiate_stk_push(request: STKPushRequest):
     try:
         payment_service = get_payment_service()
+        HTTPException(status_code=400, details="Order already paid")
         
         transaction = Transaction(
             id=str(uuid.uuid4()),
@@ -143,7 +144,7 @@ async def mpesa_callback(request: Request, background_tasks: BackgroundTasks):
         }
 
 @router.get("/status/{transaction_id}", response_model=TransactionStatusResponse)
-async def get_transaction_status(transaction_id: str):
+async def get_transaction_status(transaction_id: str, current_user=Depends(get_current_user)):
     transaction = transaction_store.get_by_id(transaction_id)
 
     if not transaction:
@@ -162,7 +163,7 @@ async def get_transaction_status(transaction_id: str):
         updated_at=transaction.updated_at.isoformat()
     )
 
-@router.get("/transactions")
+@router.get("/transactions", dependencies=[Depends(admin_required)] )
 async def list_transactions():
     transactions = transaction_store.list_all()
     return {

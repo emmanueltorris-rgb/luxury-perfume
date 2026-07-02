@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     MPESA_SHORTCODE: str = Field(default="174379", env="MPESA_SHORTCODE")
     MPESA_ENV: str = Field(default="sandbox", env="MPESA_ENV")
     MPESA_MOCK_MODE: bool = Field(default=False, env="MPESA_MOCK_MODE")
-    DATABASE_URL: str = Field(default="", env="DATABASE_URL")
-    SECRET_KEY: str = Field(default="secret", env="SECRET_KEY")
-    CLOUDINARY_CLOUD_NAME: str = Field(default="",env="CLOUDINARY_CLOUD_NAME")
-    CLOUDINARY_API_KEY: str = Field(default="", env="CLOUDINARY_API_KEY")
-    CLOUDINARY_API_SECRET: str = Field(default="",env="CLOUDINARY_API_SECRET")
+    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    CLOUDINARY_CLOUD_NAME: str = Field(...,env="CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY: str = Field(..., env="CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET: str = Field(...,env="CLOUDINARY_API_SECRET")
 
 
     @property

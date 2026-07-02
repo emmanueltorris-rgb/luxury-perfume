@@ -4,7 +4,7 @@ from datetime import datetime
 from backend.config import get_settings
 from backend.routes import payments, auth, products, orders
 from backend.database import Base, engine, SessionLocal
-from backend.models import product, order, customer, admin, user
+from backend.models import product, order,  admin, user
 from backend.models.user import User
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path

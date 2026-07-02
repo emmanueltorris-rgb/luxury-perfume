@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
@@ -10,14 +9,12 @@ from backend.database import get_db
 from backend.models.user import User
 from backend.config import get_settings
 
-
 settings = get_settings()
 
 router = APIRouter(
     prefix="/api/v1/auth",
     tags=["auth"]
 )
-
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -34,7 +31,6 @@ def verify_password(plain, hashed):
 
 
 def create_token(data: dict):
-
     token_data = data.copy()
 
     expire = datetime.utcnow() + timedelta(hours=24)
@@ -59,8 +55,7 @@ class RegisterRequest(BaseModel):
     name: str
     email: str
     password: str
-    phone: Optional[str] = None
-
+    phone: str
 
 
 @router.post("/admin/login")
@@ -70,7 +65,7 @@ def admin_login(
 ):
     admin = db.query(User).filter(
         User.email == request.email,
-        User.role == 'admin'
+        User.role == "admin"
     ).first()
 
     if not admin or not verify_password(
@@ -89,9 +84,14 @@ def admin_login(
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+            "id": admin.id,
+            "name": admin.name,
+            "email": admin.email,
+            "role": admin.role
+        }
     }
-
 
 
 @router.post("/register")
@@ -109,12 +109,22 @@ def register_user(
             detail="Email already registered"
         )
 
+    existing_phone = db.query(User).filter(
+        User.phone == request.phone
+    ).first()
+
+    if existing_phone:
+        raise HTTPException(
+            status_code=400,
+            detail="Phone number already registered"
+        )
+
     user = User(
         name=request.name,
         email=request.email,
         phone=request.phone,
         hashed_password=hash_password(request.password),
-        role='user'
+        role="customer"
     )
 
     db.add(user)
@@ -122,18 +132,15 @@ def register_user(
     db.refresh(user)
 
     return {
-        "message": "Account created successfully"
+        "message": "Account created successfully",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role
+        }
     }
-
-
-
-@router.post("/signup")
-def signup_user(
-    request: RegisterRequest,
-    db: Session = Depends(get_db)
-):
-    return register_user(request, db)
-
 
 
 @router.post("/login")
@@ -141,11 +148,9 @@ def user_login(
     request: LoginRequest,
     db: Session = Depends(get_db)
 ):
-
     user = db.query(User).filter(
         User.email == request.email
     ).first()
-
 
     if not user or not verify_password(
         request.password,
@@ -156,14 +161,19 @@ def user_login(
             detail="Invalid credentials"
         )
 
-
     token = create_token({
         "sub": user.email,
-        "role": user.role or "user"
+        "role": user.role
     })
-
 
     return {
         "access_token": token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role
+        }
     }
