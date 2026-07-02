@@ -16,8 +16,12 @@ cloudinary.config(
 
 def upload_image(file):
 
-    result = cloudinary.uploader.upload(
-        file
-    )
+    result = cloudinary.uploader.upload(file)
 
-    return result["secure_url"]
+    return {
+        "url":result["secure_url"],
+        "public_id":result["public_id"]
+    }
+
+def delete_image(public_id: str):
+    cloudinary.uploader.destroy(public_id)

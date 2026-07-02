@@ -43,7 +43,7 @@ export async function login({ email, password }) {
 }
 
 export async function signup({ name, email, phone, password }) {
-  return fetchJson('/auth/signup', {
+  return fetchJson('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ name, email, phone, password }),
   })
