@@ -17,7 +17,7 @@ export default function AdminSidebar({ activeView, onChange }) {
             key={key}
             onClick={() => onChange(key)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-              activeView === key ? 'bg-[#FF7F62] text-white' : 'text-espresso/70 hover:bg-[#FDFBF7]'
+              activeView === key ? 'bg-[#FFE9DE] text-black' : 'text-espresso/70 hover:bg-[#E8F0E3]'
             }`}
           >
             <Icon size={18} />
