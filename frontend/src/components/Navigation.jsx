@@ -24,6 +24,7 @@ function Navigation() {
   const navLinks = [
     { path: '/', label: 'Home', icon: null },
     { path: '/products', label: 'Collection', icon: null },
+    { path: '/about', label: 'About', icon: null },
     { path: '/checkout', label: 'Checkout', icon: ShoppingBag },
   ]
 
