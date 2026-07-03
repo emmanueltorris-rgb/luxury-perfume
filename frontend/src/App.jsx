@@ -4,7 +4,6 @@ import { CartProvider } from './context/CartContext'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
-import ContactPage from './pages/ContactPage'
 import AboutPage from './pages/AboutPage' // 1. Added AboutPage Import
 import CheckoutPage from './pages/CheckoutPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -31,7 +30,6 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/about" element={<AboutPage />} /> {/* 2. Added Route for /about */}
-              <Route path="/contact" element={<ContactPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route element={<ProtectedRoute requireAdmin={true} redirectTo="/login" />}>
