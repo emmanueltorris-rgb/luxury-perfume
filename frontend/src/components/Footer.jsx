@@ -12,7 +12,7 @@ function Footer() {
                 <Droplets className="w-5 h-5 text-luxury-gold" />
               </div>
               <div>
-                <h3 className="font-serif text-xl font-bold text-white">L'Essence</h3>
+                <h3 className="font-serif text-xl font-bold text-white">Arwaah Parfumerie</h3>
                 <p className="text-xs uppercase tracking-widest text-white/40">Parfumerie</p>
               </div>
             </div>
@@ -52,7 +52,7 @@ function Footer() {
               ))}
             </div>
             <p className="mt-6 text-white/40 text-xs">
-              © 2026 L'Essence Parfumerie.<br />All rights reserved.
+              © 2026 Arwaah Parfumerie.<br />All rights reserved.
             </p>
           </div>
         </div>
