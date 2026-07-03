@@ -77,3 +77,34 @@ export async function adminUpdateProduct({ token, productId, fields }) {
   if (!response.ok) throw new Error(payload?.detail || 'Update product failed')
   return payload
 }
+
+export async function adminDeleteProduct({ token, productId }) {
+  const response = await fetch(`${API_BASE}/products/${productId}`, {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(payload?.detail || 'Delete failed')
+  }
+  return true
+}
+
+export async function fetchAllOrders({ token }) {
+  const response = await fetch(`${API_BASE}/orders/`, {
+    headers: authHeaders(token),
+  })
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(payload?.detail || 'Failed to load orders')
+  return payload
+}
+
+export async function updateOrderStatus({ token, orderId, status }) {
+  const response = await fetch(`${API_BASE}/orders/${orderId}/status?status=${encodeURIComponent(status)}`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+  })
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(payload?.detail || 'Failed to update status')
+  return payload
+}
