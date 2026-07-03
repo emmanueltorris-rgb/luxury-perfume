@@ -48,7 +48,7 @@ function Navigation() {
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-xl font-bold text-white tracking-tight">
-              L'Essence
+              Arwaah
             </span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-sans">
               Parfumerie

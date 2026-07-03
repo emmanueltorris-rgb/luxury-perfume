@@ -41,7 +41,7 @@ function BrandStory() {
               <span className="heading-luxury-gold">Alchemy</span>
             </h2>
             <p className="text-white/60 leading-relaxed mb-6">
-              Founded in the heart of Nairobi, L'Essence Parfumerie was born from a singular vision: 
+              Founded in the heart of Nairobi, Arwaah Parfumerie was born from a singular vision: 
               to create fragrances that capture the soul of East Africa while meeting the standards 
               of the world's most discerning noses.
             </p>
