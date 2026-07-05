@@ -3,8 +3,10 @@ import requests
 from datetime import datetime
 from typing import Optional, Dict, Any
 from backend.config import get_settings
+import logging
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 class MpesaService:
     def __init__(self):
@@ -53,7 +55,7 @@ class MpesaService:
 
         timestamp = self._generate_timestamp()
         password = self._generate_password(timestamp)
-        callback_url = "https://tableware-princess-baffling.ngrok-free.dev/api/v1/payments/callback"
+        callback_url = settings.MPESA_CALLBACK_URL
 
         payload = {
             "BusinessShortCode": self.shortcode,
@@ -68,6 +70,7 @@ class MpesaService:
             "AccountReference": account_reference,
             "TransactionDesc": transaction_desc
         }
+        logger.info(f"STK Push Request: {payload}")
 
         url = f"{self.base_url}/mpesa/stkpush/v1/processrequest"
         headers = {
@@ -76,12 +79,41 @@ class MpesaService:
         }
 
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"STK Push initiation failed: {str(e)}")
+            response = requests.post(
+             url,
+            json=payload,
+            headers=headers,
+            timeout=30
+            )
 
+    # Refresh token if it has expired
+            if response.status_code == 401:
+                self.get_access_token()
+                headers["Authorization"] = f"Bearer {self._access_token}"
+
+            response = requests.post(
+                 url,
+                json=payload,
+                headers=headers,
+                timeout=30
+                 )
+
+            response.raise_for_status()
+            response_data = response.json()
+            logger.info(f"STK Push Response: {response_data}")
+            return response_data
+
+        except requests.RequestException as e:
+            error_message = ""
+
+            if e.response is not None:
+                error_message = e.response.text
+
+            raise Exception(
+            f"STK Push initiation failed.\n"
+            f"Status Code: {getattr(e.response, 'status_code', 'Unknown')}\n"
+            f"Response: {error_message}"
+    )
     def query_stk_status(self, checkout_request_id: str) -> Dict[str, Any]:
         if not self._access_token:
             self.get_access_token()
@@ -103,10 +135,37 @@ class MpesaService:
         }
 
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(
+             url,
+            json=payload,
+            headers=headers,
+            timeout=30
+            )
+
+    # Refresh token if it has expired
+            if response.status_code == 401:
+             self.get_access_token()
+            headers["Authorization"] = f"Bearer {self._access_token}"
+
+            response = requests.post(
+            url,
+            json=payload,
+            headers=headers,
+            timeout=30
+            )
+
             response.raise_for_status()
             return response.json()
-        except requests.RequestException as e:
-            raise Exception(f"STK Push query failed: {str(e)}")
 
+        except requests.RequestException as e:
+            error_message = ""
+
+            if e.response is not None:
+                error_message = e.response.text
+
+        raise Exception(
+            f"STK Query failed.\n"
+            f"Status Code: {getattr(e.response, 'status_code', 'Unknown')}\n"
+            f"Response: {error_message}"
+             )
 mpesa_service = MpesaService()

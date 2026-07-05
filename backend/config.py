@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     MPESA_SHORTCODE: str = Field(default="174379", env="MPESA_SHORTCODE")
     MPESA_ENV: str = Field(default="sandbox", env="MPESA_ENV")
     MPESA_MOCK_MODE: bool = Field(default=False, env="MPESA_MOCK_MODE")
+    MPESA_CALLBACK_URL: str
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     SECRET_KEY: str = Field(..., env="SECRET_KEY")
     CLOUDINARY_CLOUD_NAME: str = Field(...,env="CLOUDINARY_CLOUD_NAME")

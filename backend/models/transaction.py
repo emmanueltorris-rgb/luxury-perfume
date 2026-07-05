@@ -1,69 +1,84 @@
-from datetime import datetime
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field
-from enum import Enum
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
-class TransactionStatus(str, Enum):
-    PENDING = "PENDING"
-    PROCESSING = "PROCESSING"
-    SUCCESS = "SUCCESS"
-    FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
-    TIMEOUT = "TIMEOUT"
+from backend.database import Base
 
-class Transaction(BaseModel):
-    id: str = Field(..., description="Internal UUID for the transaction")
-    merchant_request_id: Optional[str] = None
-    checkout_request_id: Optional[str] = None
-    phone_number: str
-    amount: float
-    product_id: Optional[str] = None
-    status: TransactionStatus = TransactionStatus.PENDING
-    mpesa_receipt_number: Optional[str] = None
-    transaction_date: Optional[str] = None
-    result_code: Optional[int] = None
-    result_desc: Optional[str] = None
-    callback_metadata: Optional[Dict[str, Any]] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+class Transaction(Base):
+    __tablename__ = "transactions"
 
-_transaction_store: Dict[str, Transaction] = {}
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-class TransactionStore:
-    @staticmethod
-    def create(transaction: Transaction) -> Transaction:
-        _transaction_store[transaction.id] = transaction
-        return transaction
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id"),
+        nullable=False
+    )
 
-    @staticmethod
-    def get_by_id(transaction_id: str) -> Optional[Transaction]:
-        return _transaction_store.get(transaction_id)
+    phone_number = Column(
+        String(20),
+        nullable=False
+    )
 
-    @staticmethod
-    def get_by_checkout_id(checkout_request_id: str) -> Optional[Transaction]:
-        for tx in _transaction_store.values():
-            if tx.checkout_request_id == checkout_request_id:
-                return tx
-        return None
+    amount = Column(
+        Numeric(10, 2),
+        nullable=False
+    )
 
-    @staticmethod
-    def update(transaction_id: str, **kwargs) -> Optional[Transaction]:
-        tx = _transaction_store.get(transaction_id)
-        if not tx:
-            return None
-        for key, value in kwargs.items():
-            if hasattr(tx, key):
-                setattr(tx, key, value)
-        tx.updated_at = datetime.utcnow()
-        return tx
+    merchant_request_id = Column(
+        String(100),
+        nullable=True
+    )
 
-    @staticmethod
-    def list_all() -> list:
-        return list(_transaction_store.values())
+    checkout_request_id = Column(
+        String(100),
+        unique=True,
+        nullable=True
+    )
 
-transaction_store = TransactionStore()
+    mpesa_receipt_number = Column(
+        String(100),
+        nullable=True
+    )
+
+    transaction_date = Column(
+        String(20),
+        nullable=True
+    )
+
+
+    result_code = Column(
+        String(20),
+        nullable=True
+    )
+
+    result_description = Column(
+        String(255),
+        nullable=True
+    )
+
+    status = Column(
+        String(30),
+        default="PENDING"
+    )
+
+    created_at = Column(
+        DateTime,
+        server_default=func.now()
+    )
+
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    order = relationship(
+        "Order",
+        back_populates="transactions"
+    )

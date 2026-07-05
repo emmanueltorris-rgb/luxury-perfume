@@ -9,9 +9,10 @@ import PhoneInput from '../components/PhoneInput'
 import PaymentStatus from '../components/PaymentStatus'
 import CartSummary from '../components/CartSummary'
 import { useToast } from '../context/ToastContext'
-
+import {useAuth} from "../context/AuthContext"
 function CheckoutPage() {
   const { items, total, count } = useCart()
+  const {token}= useAuth()
   const {
     status,
     receipt,
@@ -23,22 +24,40 @@ function CheckoutPage() {
     isFailed,
     initiatePayment,
     reset,
-  } = usePayment()
+  } = usePayment(token)
   const { showToast } = useToast()
-
   const [phone, setPhone] = useState('')
   const [agreed, setAgreed] = useState(false)
-
-  const canSubmit = items.length > 0 && isValidMpesaPhone(phone) && agreed && !isLoading && !isPending
+  const [creatingOrder, setCreatingOrder] = useState(false)
+  const canSubmit = items.length > 0 && isValidMpesaPhone(phone) && agreed && !isLoading && !isPending && !creatingOrder
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!canSubmit) return
 
     try {
-      await initiatePayment(phone, total, items.map((i) => i.id).join(','))
+      setCreatingOrder(true)
+      const orderRes = await fetch(`${import.meta.env.VITE_API_URL || '/api/v1'}/orders/`,{
+        method: "POST",
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:`Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items:items.map((i) =>({product_id: i.id, quantity:i.quantity})),
+        }),
+      })
+      const orderData = await orderRes.json()
+      if(!orderRes.ok){
+        throw new Error(orderData.detail || "Failed to create order")
+      }
+      const newOrderId = orderData.order_id 
+      await initiatePayment(phone, orderData.total, newOrderId)
     } catch (err) {
-      console.error('Payment error:', err)
+      console.error('Checkout error:', err)
+      showToast(err.message || "Checkout failed", "error")
+    }finally{
+      setCreatingOrder(false)
     }
   }
 
