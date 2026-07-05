@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1'
 
-export function usePayment() {
+export function usePayment(token) {
   const [status, setStatus] = useState('idle')
   const [transactionId, setTransactionId] = useState(null)
   const [checkoutRequestId, setCheckoutRequestId] = useState(null)
@@ -26,47 +26,6 @@ export function usePayment() {
     return () => clearPoll()
   }, [clearPoll])
 
-  const initiatePayment = useCallback(async (phoneNumber, amount, productId = null) => {
-    clearPoll()
-    setStatus('loading')
-    setError(null)
-    setReceipt(null)
-    setMessage('Initiating payment...')
-
-    try {
-      const response = await fetch(`${API_BASE}/payments/stk-push`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone_number: phoneNumber,
-          amount: amount,
-          product_id: productId,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.detail || data.message || 'Payment initiation failed')
-      }
-
-      setTransactionId(data.transaction_id)
-      setCheckoutRequestId(data.checkout_request_id)
-      setStatus('pending')
-      setMessage(data.customer_message || 'Check your phone for the M-Pesa prompt')
-
-      startPolling(data.transaction_id)
-
-      return data
-
-    } catch (err) {
-      setStatus('failed')
-      setError(err.message)
-      setMessage(err.message)
-      throw err
-    }
-  }, [clearPoll])
-
   const startPolling = useCallback((txId) => {
     pollInterval.current = setInterval(async () => {
       pollAttempts.current += 1
@@ -79,7 +38,9 @@ export function usePayment() {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/payments/status/${txId}`)
+        const response = await fetch(`${API_BASE}/payments/status/${txId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         const data = await response.json()
 
         if (!response.ok) {
@@ -129,7 +90,50 @@ export function usePayment() {
         console.error('Polling error:', err)
       }
     }, 3000)
-  }, [clearPoll])
+  }, [clearPoll, token])
+
+  const initiatePayment = useCallback(async (phoneNumber, amount, orderId = null) => {
+    clearPoll()
+    setStatus('loading')
+    setError(null)
+    setReceipt(null)
+    setMessage('Initiating payment...')
+
+    try {
+      const response = await fetch(`${API_BASE}/payments/stk-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          order_id: orderId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        const detail = Array.isArray(data.detail)
+          ? data.detail.map((d) => d.msg).join(', ')
+          : data.detail
+        throw new Error(detail || data.message || 'Payment initiation failed')
+      }
+
+      setTransactionId(data.transaction_id)
+      setCheckoutRequestId(data.checkout_request_id)
+      setStatus('pending')
+      setMessage(data.customer_message || 'Check your phone for the M-Pesa prompt')
+
+      startPolling(data.transaction_id)
+
+      return data
+
+    } catch (err) {
+      setStatus('failed')
+      setError(err.message)
+      setMessage(err.message)
+      throw err
+    }
+  }, [clearPoll, startPolling])
 
   const reset = useCallback(() => {
     clearPoll()

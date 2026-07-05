@@ -2,7 +2,18 @@ import json
 import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
-from backend.models.transaction import Transaction, TransactionStatus, transaction_store
+from sqlalchemy.orm import Session
+
+from backend.database import SessionLocal
+from backend.models.transaction import Transaction
+from backend.models.order import Order
+from backend.models.order_item import OrderItem
+from backend.models.product import Product
+
+from backend.crud.transaction import (
+    get_by_checkout_request_id,
+    update_transaction
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +47,15 @@ class CallbackHandler:
     def process_callback(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
             parsed = cls.parse_callback(payload)
+            db:Session = SessionLocal()
 
             checkout_request_id = parsed["checkout_request_id"]
             result_code = parsed["result_code"]
             result_desc = parsed["result_desc"]
 
-            transaction = transaction_store.get_by_checkout_id(checkout_request_id)
+            transaction = get_by_checkout_request_id(
+                db,
+                checkout_request_id)
 
             if not transaction:
                 logger.warning(f"Callback received for unknown transaction: {checkout_request_id}")
@@ -52,7 +66,7 @@ class CallbackHandler:
                 }
 
             if result_code == 0:
-                status = TransactionStatus.SUCCESS
+                status = "SUCCESS"
                 metadata = parsed["callback_metadata"]
 
                 mpesa_receipt = cls.extract_metadata_item(metadata, "MpesaReceiptNumber")
@@ -60,19 +74,38 @@ class CallbackHandler:
                 amount = cls.extract_metadata_item(metadata, "Amount")
                 phone = cls.extract_metadata_item(metadata, "PhoneNumber")
 
-                transaction_store.update(
-                    transaction.id,
+                update_transaction(
+                    db,
+                    transaction,
                     status=status,
                     mpesa_receipt_number=mpesa_receipt,
                     transaction_date=transaction_date,
-                    result_code=result_code,
-                    result_desc=result_desc,
-                    callback_metadata={
-                        "amount": amount,
-                        "phone_number": phone,
-                        "raw_metadata": metadata
-                    }
+                    result_code=str(result_code),
+                    result_description=result_desc
                 )
+                order = db.query(Order).filter(
+                    Order.id == transaction.order_id
+                                ).first()
+
+                if not order:
+                    logger.warning(f"Order not found for transaction {transaction.id}")
+                    return{
+                        "success":False,
+                        "message":"Order not found"
+                    }
+                order.status ="paid"
+                items = db.query(OrderItem).filter(
+                        OrderItem.order_id == order.id
+                        ).all()
+
+                for item in items:
+                    product = db.query(Product).filter(
+                        Product.id == item.product_id
+                      ).first()
+
+                    if product:
+                        product.stock -= item.quantity
+                db.commit()
 
                 logger.info(f"Payment SUCCESS: Receipt={mpesa_receipt}, Amount={amount}, TxID={transaction.id}")
 
@@ -81,36 +114,48 @@ class CallbackHandler:
                     "message": "Payment completed successfully",
                     "transaction_id": transaction.id,
                     "mpesa_receipt": mpesa_receipt,
-                    "status": status.value
+                    "status": status
                 }
 
             else:
                 status_map = {
-                    1032: TransactionStatus.CANCELLED,
-                    1037: TransactionStatus.TIMEOUT,
-                }
-                status = status_map.get(result_code, TransactionStatus.FAILED)
+                        1032: "CANCELLED",
+                        1037: "TIMEOUT",
+                        }
 
-                transaction_store.update(
-                    transaction.id,
-                    status=status,
-                    result_code=result_code,
-                    result_desc=result_desc,
-                    callback_metadata={"raw_result": parsed}
+                status = status_map.get(result_code, "FAILED")
+
+            update_transaction(
+                db,
+                transaction,
+                status=status,
+                result_code=str(result_code),
+                result_description=result_desc,
+                     )
+
+            order = db.query(Order).filter(
+                Order.id == transaction.order_id
+                    ).first()
+
+            if order:
+                order.status = "payment_failed"
+
+            db.commit()
+
+            logger.warning(
+                f"Payment FAILED: Code={result_code}, Desc={result_desc}, TxID={transaction.id}"
                 )
 
-                logger.warning(f"Payment FAILED: Code={result_code}, Desc={result_desc}, TxID={transaction.id}")
-
-                return {
-                    "success": False,
-                    "message": f"Payment failed: {result_desc}",
-                    "transaction_id": transaction.id,
-                    "status": status.value,
-                    "result_code": result_code
-                }
-
+            return {
+                "success": False,
+                "message": f"Payment failed: {result_desc}",
+                "transaction_id": transaction.id,
+                "status": status,
+                "result_code": result_code,
+                    }
         except Exception as e:
-            logger.error(f"Callback processing error: {e}")
+            db.rollback()
+            logger.error(f"Callback processing error:{e}")
             raise
-
-callback_handler = CallbackHandler()
+        finally:
+            db.close()

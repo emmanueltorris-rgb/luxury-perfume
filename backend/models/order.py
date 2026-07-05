@@ -41,3 +41,9 @@ class Order(Base):
         back_populates="order",
         cascade="all, delete"
     )
+
+    transactions = relationship(
+        "Transaction",
+        back_populates="order",
+        cascade="all, delete-orphan"
+        )
