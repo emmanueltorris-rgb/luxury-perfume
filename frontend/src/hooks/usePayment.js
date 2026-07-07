@@ -100,11 +100,14 @@ export function usePayment(token) {
     setMessage('Initiating payment...')
 
     try {
+      console.log("TOKEN:", token)
       const response = await fetch(`${API_BASE}/payments/stk-push`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          Authorization:`Bearer ${token}`,
+         },
         body: JSON.stringify({
-          phone_number: phoneNumber,
+          phone_number: phoneNumber, 
           order_id: orderId,
         }),
       })
@@ -133,7 +136,7 @@ export function usePayment(token) {
       setMessage(err.message)
       throw err
     }
-  }, [clearPoll, startPolling])
+  }, [clearPoll, startPolling,token])
 
   const reset = useCallback(() => {
     clearPoll()
