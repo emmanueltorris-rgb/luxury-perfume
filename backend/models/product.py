@@ -24,3 +24,9 @@ class Product(Base):
         "OrderItem",
           back_populates="product"
           )
+    
+    cart_items = relationship(
+        "CartItem",
+        back_populates="product",
+        cascade="all, delete-orphan"
+    )

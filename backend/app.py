@@ -8,7 +8,7 @@ from backend.models import product, order,  admin, user, transaction
 from backend.models.user import User
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
-
+from backend.routes import cart
 
 
 settings = get_settings()
@@ -54,6 +54,7 @@ app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(payments.router)
+app.include_router(cart.router)
 
 # Serve uploaded images
 static_path = Path(__file__).resolve().parents[1] / 'static'

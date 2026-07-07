@@ -70,6 +70,7 @@ class MpesaService:
             "AccountReference": account_reference,
             "TransactionDesc": transaction_desc
         }
+        print(payload)
         logger.info(f"STK Push Request: {payload}")
 
         url = f"{self.base_url}/mpesa/stkpush/v1/processrequest"
