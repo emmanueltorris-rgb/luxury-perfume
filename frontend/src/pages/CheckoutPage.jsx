@@ -31,35 +31,69 @@ function CheckoutPage() {
   const [creatingOrder, setCreatingOrder] = useState(false)
   const canSubmit = items.length > 0 && isValidMpesaPhone(phone) && agreed && !isLoading && !isPending && !creatingOrder
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!canSubmit) return
+const handleSubmit = async (e) => {
+  e.preventDefault()
 
-    try {
-      setCreatingOrder(true)
-      const orderRes = await fetch(`${import.meta.env.VITE_API_URL || '/api/v1'}/orders/`,{
+  if (!canSubmit) return
+
+  try {
+    setCreatingOrder(true)
+
+    const API_URL = import.meta.env.VITE_API_URL || "/api/v1"
+
+    // Check if the user already has a pending order
+    const pendingRes = await fetch(`${API_URL}/orders/pending`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!pendingRes.ok) {
+      throw new Error("Failed to check pending order")
+    }
+
+    const pendingData = await pendingRes.json()
+
+    let orderId
+    let totalAmount
+
+    if (pendingData.exists) {
+      orderId = pendingData.order_id
+      totalAmount = pendingData.total
+    } else {
+      const orderRes = await fetch(`${API_URL}/orders/`, {
         method: "POST",
-        headers:{
-          "Content-Type":"application/json",
-          Authorization:`Bearer ${token}`,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          items:items.map((i) =>({product_id: i.id, quantity:i.quantity})),
+          items: items.map((i) => ({
+            product_id: i.product_id ?? i.id,
+            quantity: i.quantity,
+          })),
         }),
       })
+
       const orderData = await orderRes.json()
-      if(!orderRes.ok){
+
+      if (!orderRes.ok) {
         throw new Error(orderData.detail || "Failed to create order")
       }
-      const newOrderId = orderData.order_id 
-      await initiatePayment(phone, orderData.total, newOrderId)
-    } catch (err) {
-      console.error('Checkout error:', err)
-      showToast(err.message || "Checkout failed", "error")
-    }finally{
-      setCreatingOrder(false)
+
+      orderId = orderData.order_id
+      totalAmount = orderData.total
     }
+
+    await initiatePayment(phone, totalAmount, orderId)
+
+  } catch (err) {
+    console.error("Checkout error:", err)
+    showToast(err.message || "Checkout failed", "error")
+  } finally {
+    setCreatingOrder(false)
   }
+}
 
   useEffect(() => {
     if (!message) return
