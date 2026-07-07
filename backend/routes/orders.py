@@ -1,26 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from typing import List
-
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from backend.auth_utils import get_current_user
 from backend.database import get_db
 from backend.models.order import Order
 from backend.models.order_item import OrderItem
 from backend.models.product import Product
-from backend.models.user import User
-from backend.auth_utils import get_current_user
 
 
-router = APIRouter(
-    prefix="/api/v1/orders",
-    tags=["orders"]
-)
-
+router = APIRouter( prefix="/api/v1/orders", tags=["orders"])
 
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
-
 
 class OrderCreate(BaseModel):
     items: List[OrderItemCreate]
@@ -33,76 +26,91 @@ def create_order(
     current_user=Depends(get_current_user)
 ):
 
-    user = db.query(User).filter(
-        User.email == current_user["email"]
-    ).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
+    existing_order = (
+        db.query(Order)
+        .filter(
+            Order.customer_id == current_user.id,
+            Order.status == "pending"
         )
-
-    order = Order(
-        customer_id=user.id,
-        total=0,
-        status="pending"
+        .first()
     )
 
-    db.add(order)
-    db.flush()      # Gets order.id without committing
+    if existing_order:
+        return {
+            "message": "Pending order already exists",
+            "order_id": existing_order.id,
+            "total": float(existing_order.total),
+            "status": existing_order.status
+        }
 
-    total = 0
-
-    for item in data.items:
-
-        if item.quantity <= 0:
-            raise HTTPException(
-                status_code=400,
-                detail="Quantity must be greater than zero"
-            )
-
-        product = db.query(Product).filter(
-            Product.id == item.product_id,
-            Product.is_active == True
-        ).first()
-
-        if not product:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Product {item.product_id} not found"
-            )
-
-        if product.stock < item.quantity:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Only {product.stock} item(s) left for {product.name}"
-            )
-
-        order_item = OrderItem(
-            order_id=order.id,
-            product_id=product.id,
-            quantity=item.quantity,
-            price=product.price
+    try:
+        order = Order(
+            customer_id=current_user.id,
+            total=0,
+            status="pending"
         )
 
-        db.add(order_item)
+        db.add(order)
+        db.flush()
 
-        product.stock -= item.quantity
+        total = 0
 
-        total += product.price * item.quantity
+        for item in data.items:
 
-    order.total = total
+            if item.quantity <= 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Quantity must be greater than zero"
+                )
 
-    db.commit()
-    db.refresh(order)
+            product = (
+                db.query(Product)
+                .filter(
+                    Product.id == item.product_id,
+                    Product.is_active == True
+                )
+                .first()
+            )
 
-    return {
-        "message": "Order created successfully",
-        "order_id": order.id,
-        "total": float(order.total),
-        "status": order.status
-    }
+            if not product:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Product {item.product_id} not found"
+                )
+
+            if product.stock < item.quantity:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Only {product.stock} item(s) left for {product.name}"
+                )
+
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=product.id,
+                quantity=item.quantity,
+                price=product.price
+            )
+
+            db.add(order_item)
+
+            total += product.price * item.quantity
+
+        order.total = total
+
+        db.commit()
+        db.refresh(order)
+
+        return {
+            "message": "Order created successfully",
+            "order_id": order.id,
+            "total": float(order.total),
+            "status": order.status
+        }
+
+    except:
+        db.rollback()
+        raise
+
 
 
 @router.get("/my-orders")
@@ -110,28 +118,50 @@ def my_orders(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    orders = (
+        db.query(Order)
+        .filter(Order.customer_id == current_user.id)
+        .order_by(Order.id.desc())
+        .all()
+    )
 
-    user = db.query(User).filter(
-        User.email == current_user["email"]
-    ).first()
+    return orders
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
-
-    return db.query(Order).filter(
-        Order.customer_id == user.id
-    ).all()
 VALID_ORDER_STATUSES = {
     "pending",
     "paid",
+    "payment_failed",
     "processing",
     "shipped",
     "delivered",
     "cancelled"
 }
+
+@router.get("/pending")
+def get_pending_order(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    order = (
+        db.query(Order)
+        .filter(
+            Order.customer_id == current_user.id,
+            Order.status == "pending"
+        )
+        .first()
+    )
+
+    if not order:
+        return {
+            "exists": False
+        }
+
+    return {
+        "exists": True,
+        "order_id": order.id,
+        "total": float(order.total),
+        "status": order.status
+    }
 
 
 @router.get("/")
@@ -139,15 +169,17 @@ def all_orders(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=403,
             detail="Admin access required"
         )
 
-    return db.query(Order).all()
-
+    return (
+        db.query(Order)
+        .order_by(Order.id.desc())
+        .all()
+    )
 
 @router.put("/{order_id}/status")
 def update_status(
@@ -156,8 +188,7 @@ def update_status(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=403,
             detail="Admin access required"
@@ -168,12 +199,14 @@ def update_status(
     if status not in VALID_ORDER_STATUSES:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid status. Allowed values: {', '.join(VALID_ORDER_STATUSES)}"
+            detail=f"Invalid status. Allowed values: {', '.join(sorted(VALID_ORDER_STATUSES))}"
         )
 
-    order = db.query(Order).filter(
-        Order.id == order_id
-    ).first()
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id)
+        .first()
+    )
 
     if not order:
         raise HTTPException(
@@ -191,3 +224,4 @@ def update_status(
         "order_id": order.id,
         "status": order.status
     }
+

@@ -16,3 +16,8 @@ class User(Base):
     address = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
     orders = relationship( "Order", back_populates="customer")
+    cart = relationship("Cart", 
+                        back_populates="user", 
+                        uselist=False,
+                        cascade="all, delete-orphan"
+                        )

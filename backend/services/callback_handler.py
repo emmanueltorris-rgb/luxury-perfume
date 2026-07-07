@@ -9,7 +9,7 @@ from backend.models.transaction import Transaction
 from backend.models.order import Order
 from backend.models.order_item import OrderItem
 from backend.models.product import Product
-
+from backend.crud.cart import delete_cart
 from backend.crud.transaction import (
     get_by_checkout_request_id,
     update_transaction
@@ -47,6 +47,7 @@ class CallbackHandler:
     def process_callback(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
             parsed = cls.parse_callback(payload)
+            logger.ifo(f"Parsed callback:{parsed}")
             db:Session = SessionLocal()
 
             checkout_request_id = parsed["checkout_request_id"]
@@ -105,6 +106,7 @@ class CallbackHandler:
 
                     if product:
                         product.stock -= item.quantity
+                delete_cart(db, order.customer_id)
                 db.commit()
 
                 logger.info(f"Payment SUCCESS: Receipt={mpesa_receipt}, Amount={amount}, TxID={transaction.id}")

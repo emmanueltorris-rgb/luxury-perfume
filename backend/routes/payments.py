@@ -63,7 +63,7 @@ class TransactionStatusResponse(BaseModel):
     updated_at: str
 
 @router.post("/stk-push", response_model=STKPushResponse, status_code=status.HTTP_200_OK)
-async def initiate_stk_push(request: STKPushRequest):
+async def initiate_stk_push(request: STKPushRequest, current_user=Depends(get_current_user)):
     try:
         db:Session = SessionLocal()
         payment_service = get_payment_service()
@@ -76,7 +76,11 @@ async def initiate_stk_push(request: STKPushRequest):
             status_code=404,
             detail="Order not found"
         )
-
+        if order.customer_id != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                details="You cannot pay for another user's order"
+            )
         if order.status == "paid":
             raise HTTPException(
             status_code=400,
@@ -137,6 +141,9 @@ async def initiate_stk_push(request: STKPushRequest):
         raise
     except Exception as e:
         logger.error(f"STK Push endpoint error: {e}")
+        if "order" in locals():
+            order.status = "payment_failed"
+            db.commit()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Payment initiation failed: {str(e)}"
@@ -150,7 +157,7 @@ async def mpesa_callback(request: Request, background_tasks: BackgroundTasks):
         payload = await request.json()
         logger.info(f"Received M-Pesa callback: {json.dumps(payload, indent=2)}")
 
-        background_tasks.add_task(callback_handler.process_callback, payload)
+        background_tasks.add_task(CallbackHandler.process_callback, payload)
 
         return {
             "ResultCode": 0,
