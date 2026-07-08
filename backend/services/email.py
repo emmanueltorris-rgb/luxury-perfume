@@ -6,7 +6,7 @@ resend.api_key = settings.RESEND_API_KEY
 
 def send_email(to_email:str, subject:str, html:str):
     try:
-        response = resend.Email.send({
+        response = resend.Emails.send({
             "from":settings.FROM_EMAIL,
             "to":[to_email],
             "subject":subject,
@@ -15,4 +15,5 @@ def send_email(to_email:str, subject:str, html:str):
         return response
     except Exception as e:
         print("Email error:", e)
+        raise
 

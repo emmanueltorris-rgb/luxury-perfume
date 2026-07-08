@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from backend.config import get_settings
-from backend.routes import payments, auth, products, orders
+from backend.routes import payments, auth, products, orders,contact
 from backend.database import Base, engine, SessionLocal
 from backend.models import product, order,  admin, user, transaction
 from backend.models.user import User
@@ -55,7 +55,7 @@ app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(payments.router)
 app.include_router(cart.router)
-
+app.include_router(contact.router)
 # Serve uploaded images
 static_path = Path(__file__).resolve().parents[1] / 'static'
 static_path.mkdir(parents=True, exist_ok=True)

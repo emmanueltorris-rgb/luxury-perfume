@@ -36,25 +36,28 @@ def create_order(
     )
 
     if existing_order:
-        return {
-            "message": "Pending order already exists",
-            "order_id": existing_order.id,
-            "total": float(existing_order.total),
-            "status": existing_order.status
-        }
-
-    try:
-        order = Order(
-            customer_id=current_user.id,
-            total=0,
-            status="pending"
-        )
-
-        db.add(order)
-        db.flush()
-
+        order = existing_order
+        db.query(OrderItem).filter(
+            OrderItem.order_id == order.id
+        ).delete()
         total = 0
 
+    try:
+        if existing_order:
+            order = existing_order
+            db.query(OrderItem).filter(
+            OrderItem.order_id == order.id
+            ).delete()
+        else:
+            order = Order(
+                customer_id=current_user.id,
+                total=0,
+                status="pending"
+            )
+            db.add(order)
+            db.flush()
+        total = 0
+        
         for item in data.items:
 
             if item.quantity <= 0:

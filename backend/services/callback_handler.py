@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
+from backend.services.email import send_email
 from backend.models.transaction import Transaction
 from backend.models.order import Order
 from backend.models.order_item import OrderItem
@@ -108,6 +109,20 @@ class CallbackHandler:
                         product.stock -= item.quantity
                 delete_cart(db, order.customer_id)
                 db.commit()
+                try:
+                    send_email(
+                        to_email=order.customer.email,
+                    subject="Test Order Confirmation",
+                    html=f"""
+                     <h2>Hello {order.customer.name}</h2>
+
+                        <p>Your payment for Order #{order.id} was successful.</p>
+
+                         <p>Thank you for shopping with L'Essence Parfumerie.</p>
+                            """
+                                 )
+                except Exception as e:
+                         logger.error(f"Failed to send confirmation email: {e}")
 
                 logger.info(f"Payment SUCCESS: Receipt={mpesa_receipt}, Amount={amount}, TxID={transaction.id}")
 
