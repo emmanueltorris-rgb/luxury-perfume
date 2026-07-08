@@ -6,11 +6,41 @@ function AboutContactPage() {
   const [formState, setFormState] = useState({ name: '', email: '', message: '' })
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setIsSubmitted(true)
-  }
+  
+const handleSubmit = async (e) => {
+  e.preventDefault()
 
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || "/api/v1"}/contact/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formState),
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to send message")
+    }
+
+    setIsSubmitted(true)
+
+    setFormState({
+      name: "",
+      email: "",
+      message: "",
+    })
+
+  } catch (err) {
+    console.error(err)
+    alert(err.message)
+  }
+}
   const containerVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { staggerChildren: 0.15 } }
