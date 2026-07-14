@@ -47,7 +47,7 @@ def get_current_user(
 
         return user
 
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as e:
         print("JWT ERROR:",str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
