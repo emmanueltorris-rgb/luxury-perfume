@@ -17,16 +17,13 @@ class Product(Base):
     category = Column(String)
     image_url = Column(String)
     image_public_id = Column(String)
+    preview_description = Column(Text)
+    last = Column(String)
+    scent_strength = Column(String)
+    best_for = Column(String)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now(),nullable=False)
-
-    order_items = relationship(
-        "OrderItem",
-          back_populates="product"
-          )
-    
-    cart_items = relationship(
-        "CartItem",
-        back_populates="product",
-        cascade="all, delete-orphan"
-    )
+    order_items = relationship("OrderItem", back_populates="product")
+    cart_items = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
+    images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="product", cascade="all, delete-orphan")

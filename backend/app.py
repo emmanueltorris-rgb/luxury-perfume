@@ -30,8 +30,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    Base.metadata.create_all(bind=engine)
-
     db = SessionLocal()
     try:
         admin_email = "torrisemanuel@gmail.com"
