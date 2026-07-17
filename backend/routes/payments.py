@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, HTTPException, status, Request, BackgroundTasks,Depends
 from pydantic import BaseModel, Field, validator
 from typing import Optional, Dict, Any
-from backend.auth_utils import get_current_user, admin_required
+from backend.auth_utils import get_current_user, get_current_admin
 from backend.services.mpesa import mpesa_service
 from backend.services.mock_mpesa import mock_mpesa_service
 from backend.services.callback_handler import CallbackHandler
@@ -195,7 +195,7 @@ async def get_transaction_status(transaction_id: int, current_user=Depends(get_c
          )
     finally:
         db.close()
-@router.get("/transactions", dependencies=[Depends(admin_required)] )
+@router.get("/transactions", dependencies=[Depends(get_current_admin)] )
 async def list_transactions():
     db:Session = SessionLocal()
     try:

@@ -55,7 +55,7 @@ function authHeaders(token) {
 
 export async function adminCreateProduct({ token, fields }) {
   // fields is a FormData instance
-  const response = await fetch(`${API_BASE}/products/`, {
+  const response = await fetch(`${API_BASE}/admin/products/`, {
     method: 'POST',
     headers: authHeaders(token),
     body: fields,
@@ -67,7 +67,7 @@ export async function adminCreateProduct({ token, fields }) {
 }
 
 export async function adminUpdateProduct({ token, productId, fields }) {
-  const response = await fetch(`${API_BASE}/products/${productId}`, {
+  const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
     method: 'PUT',
     headers: authHeaders(token),
     body: fields,
@@ -79,7 +79,7 @@ export async function adminUpdateProduct({ token, productId, fields }) {
 }
 
 export async function adminDeleteProduct({ token, productId }) {
-  const response = await fetch(`${API_BASE}/products/${productId}`, {
+  const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
     method: 'DELETE',
     headers: authHeaders(token),
   })
