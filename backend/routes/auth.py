@@ -1,33 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt , JWTError
 from datetime import datetime, timedelta
-
+from fastapi.security import OAuth2PasswordBearer
 from backend.database import get_db
 from backend.models.user import User
 from backend.config import get_settings
-
+from backend.auth_utils import (hash_password,verify_password, create_token)
 settings = get_settings()
 
 router = APIRouter(
     prefix="/api/v1/auth",
     tags=["auth"]
 )
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
-
-
-def hash_password(password: str):
-    return pwd_context.hash(password)
-
-
-def verify_password(plain, hashed):
-    return pwd_context.verify(plain, hashed)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
 
 def create_token(data: dict):
@@ -45,6 +32,49 @@ def create_token(data: dict):
         algorithm="HS256"
     )
 
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials"
+    )
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=["HS256"]
+        )
+
+        email = payload.get("sub")
+
+        if email is None:
+            raise credentials_exception
+
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(User).filter(
+        User.email == email
+    ).first()
+
+    if user is None:
+        raise credentials_exception
+
+    return user
+
+def get_current_admin(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+
+    return current_user
 
 class LoginRequest(BaseModel):
     email: str
