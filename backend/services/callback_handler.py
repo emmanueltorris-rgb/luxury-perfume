@@ -48,7 +48,7 @@ class CallbackHandler:
     def process_callback(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
             parsed = cls.parse_callback(payload)
-            logger.ifo(f"Parsed callback:{parsed}")
+            logger.info(f"Parsed callback:{parsed}")
             db:Session = SessionLocal()
 
             checkout_request_id = parsed["checkout_request_id"]
@@ -107,7 +107,7 @@ class CallbackHandler:
 
                     if product:
                         product.stock -= item.quantity
-                delete_cart(db, order.customer_id)
+                delete_cart(db, order.user_id)
                 db.commit()
                 try:
                     send_email(

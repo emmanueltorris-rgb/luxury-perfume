@@ -10,6 +10,7 @@ from backend.models.product_image import ProductImage
 from backend.models.review import Review
 from backend.models.wishlist import Wishlist
 from backend.models.wishlist_item import WishlistItem
+from backend.models.admin import Admin
 __all__ = [
     "User",
     "Product",
@@ -23,4 +24,5 @@ __all__ = [
     "Review",
     "WishlistItem",
     "Wishlist",
+    "Admin",
 ]

@@ -15,7 +15,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     address = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
-    orders = relationship( "Order", back_populates="customer")
+    orders = relationship( "Order", back_populates="user")
     cart = relationship("Cart",  back_populates="user", uselist=False, cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
     wishlist = relationship("Wishlist", back_populates="user", uselist=False, cascade="all, delete-orphan")

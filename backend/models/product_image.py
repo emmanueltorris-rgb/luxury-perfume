@@ -12,5 +12,5 @@ class ProductImage(Base):
     image_public_id = Column(String, nullable=True)
     is_main = Column(Boolean, default=False)
     display_order =Column(Integer, default=1)
-    created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
     product = relationship("Product", back_populates="images")
