@@ -9,10 +9,12 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column( Integer, ForeignKey("users.id"))
+    user_id = Column( Integer, ForeignKey("users.id"),nullable=False, index=True)
     total = Column(Numeric(10,2), nullable=False)
-    status = Column(String(50), default="pending")
+    status = Column(String(50), default="pending_payment",nullable=False)
     created_at = Column( DateTime, server_default=func.now())
-    customer = relationship( "User", back_populates="orders")
-    items = relationship( "OrderItem", back_populates="order", cascade="all, delete")
+    user = relationship( "User", back_populates="orders")
+    items = relationship( "OrderItem", back_populates="order", cascade="all, delete-orphan")
     transactions = relationship(  "Transaction", back_populates="order", cascade="all, delete-orphan")
+    address_id = Column(Integer, ForeignKey("addresses.id"), nullable=False)
+    address = relationship("Address", back_populates="orders")

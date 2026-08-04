@@ -1,3 +1,19 @@
-from backend.routes.payments import router as payments_router
+from . import auth
+from . import products
+from . import orders
+from . import payments
+from . import contact
+from . import cart
+from . import admin_products
+from . import admin_orders
 
-__all__ = ["payments_router"]
+__all__ = [
+    "auth",
+    "products",
+    "orders",
+    "payments",
+    "contact",
+    "cart",
+    "admin_products",
+    "admin_orders",
+]

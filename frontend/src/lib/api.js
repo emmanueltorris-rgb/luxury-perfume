@@ -91,7 +91,7 @@ export async function adminDeleteProduct({ token, productId }) {
 }
 
 export async function fetchAllOrders({ token }) {
-  const response = await fetch(`${API_BASE}/orders/`, {
+  const response = await fetch(`${API_BASE}/admin/orders/`, {
     headers: authHeaders(token),
   })
   const payload = await response.json().catch(() => null)
@@ -100,7 +100,7 @@ export async function fetchAllOrders({ token }) {
 }
 
 export async function updateOrderStatus({ token, orderId, status }) {
-  const response = await fetch(`${API_BASE}/orders/${orderId}/status?status=${encodeURIComponent(status)}`, {
+  const response = await fetch(`${API_BASE}/admin/orders/${orderId}/status?status=${encodeURIComponent(status)}`, {
     method: 'PUT',
     headers: authHeaders(token),
   })

@@ -17,4 +17,4 @@ class Address(Base):
     is_default = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     user = relationship("User", back_populates="addresses")
-    
+    orders=relationship("Order", back_populates="address")

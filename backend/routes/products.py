@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
 from typing import Optional, List
 from backend.models.user import User
@@ -13,6 +13,14 @@ router = APIRouter(
     tags=["products"]
 )
 
+class ProductImageResponse(BaseModel):
+    id: int
+    image_url: str
+    is_main: bool
+    display_order: int
+
+    class Config:
+        from_attributes = True
 
 class ProductResponse(BaseModel):
     id: int
@@ -23,8 +31,12 @@ class ProductResponse(BaseModel):
     stock: int
     size_ml: Optional[int]
     category: Optional[str]
-    image_url: Optional[str]
+    preview_description: Optional[str]
+    last: Optional[str]
+    scent_strength: Optional[str]
+    best_for: Optional[str]
 
+    images: List[ProductImageResponse] = []
     class Config:
         from_attributes = True
 
@@ -33,9 +45,12 @@ class ProductResponse(BaseModel):
 def get_products(
     db: Session = Depends(get_db)
 ):
-    return db.query(Product).filter(
-        Product.is_active == True
-    ).all()
+    return (
+    db.query(Product)
+    .options(joinedload(Product.images))
+    .filter(Product.is_active == True)
+    .all()
+)
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
@@ -43,10 +58,10 @@ def get_product(
     product_id: int,
     db: Session = Depends(get_db)
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id,
-        Product.is_active == True
-    ).first()
+    product = (db.query(Product).options(joinedload(Product.images))
+    .filter(Product.id == product_id,Product.is_active == True)
+    .first()
+)
 
     if not product:
         raise HTTPException(
