@@ -6,11 +6,17 @@ from backend.models.product import Product
 from backend.models.product_image import ProductImage
 from backend.models.user import User
 from backend.cloudinary import upload_image, delete_image
+from pydantic import BaseModel
+
 
 router = APIRouter(
     prefix="/api/v1/admin/product-images",
     tags=["Admin Product Images"]
 )
+
+class ImageOrderUpdate(BaseModel):
+    display_order:int
+
 @router.post("/{product_id}")
 def add_product_images(
     product_id: int,
@@ -30,6 +36,24 @@ def add_product_images(
             detail="Product not found"
         )
 
+    existing_images = (
+        db.query(ProductImage)
+        .filter(ProductImage.product_id == product.id)
+        .count()
+    )
+
+    last_image = (
+        db.query(ProductImage)
+        .filter(ProductImage.product_id == product.id)
+        .order_by(ProductImage.display_order.desc())
+        .first()
+    )
+
+    next_display_order = (
+        last_image.display_order + 1
+        if last_image
+        else 1
+    )
     for image in images:
         image_result = upload_image(image.file)
 
@@ -37,17 +61,45 @@ def add_product_images(
             product_id=product.id,
             image_url=image_result["url"],
             image_public_id=image_result["public_id"],
-            is_main=False
+            is_main=(existing_images == 0),
+            display_order=next_display_order
         )
 
         db.add(product_image)
 
+        existing_images += 1
+        next_display_order += 1
     db.commit()
-
     return {
         "message": f"{len(images)} image(s) uploaded successfully."
     }
 
+@router.get("/{product_id}")
+def get_product_images(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .first()
+    )
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    images = (
+        db.query(ProductImage)
+        .filter(ProductImage.product_id == product_id)
+        .order_by(ProductImage.display_order)
+        .all()
+    )
+
+    return images
 
 @router.patch("/{image_id}/main")
 def set_main_image(
@@ -65,7 +117,6 @@ def set_main_image(
             status_code=404,
             detail="Image not found"
         )
-
     db.query(ProductImage).filter(
         ProductImage.product_id == image.product_id
     ).update(
@@ -80,6 +131,81 @@ def set_main_image(
     return {
         "message": "Main image updated successfully.",
         "image_id": image.id
+    }
+
+@router.patch("/{image_id}/order")
+def update_image_order(
+    image_id: int,
+    data: ImageOrderUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    if data.display_order < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Display order must be at least 1"
+        )
+
+    image = (
+        db.query(ProductImage)
+        .filter(ProductImage.id == image_id)
+        .first()
+    )
+
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail="Image not found"
+        )
+
+    product_id = image.product_id
+    old_order = image.display_order
+    new_order = data.display_order
+
+    if old_order == new_order:
+        return {
+            "message": "Image order unchanged.",
+            "image_id": image.id,
+            "display_order": image.display_order
+        }
+
+    images = (
+        db.query(ProductImage)
+        .filter(ProductImage.product_id == product_id)
+        .order_by(ProductImage.display_order)
+        .all()
+    )
+
+    max_order = len(images)
+
+    if new_order > max_order:
+        new_order = max_order
+
+    if new_order < old_order:
+        for other_image in images:
+            if (
+                other_image.id != image.id
+                and old_order >= other_image.display_order >= new_order
+            ):
+                other_image.display_order += 1
+
+    else:
+        for other_image in images:
+            if (
+                other_image.id != image.id
+                and old_order <= other_image.display_order <= new_order
+            ):
+                other_image.display_order -= 1
+
+    image.display_order = new_order
+
+    db.commit()
+    db.refresh(image)
+
+    return {
+        "message": "Image order updated successfully.",
+        "image_id": image.id,
+        "display_order": image.display_order
     }
 
 @router.delete("/{image_id}")

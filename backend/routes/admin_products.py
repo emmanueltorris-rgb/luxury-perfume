@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
 from backend.database import get_db
 from backend.models.product import Product
@@ -8,27 +8,53 @@ from backend.models.user import User
 from backend.auth_utils import get_current_admin
 from backend.cloudinary import upload_image
 from backend.routes.products import ProductResponse
-from backend.cloudinary import delete_image
+
 router = APIRouter(
     prefix="/api/v1/admin/products",
     tags=["Admin Products"]
     )
 
-@router.get("/")
+@router.get("/", response_model=List[ProductResponse])
 def get_all_products(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ):
-    return db.query(Product).all()
-@router.get("/{product_id}")
+    return (
+        db.query(Product)
+        .options(joinedload(Product.images))
+        .all()
+    )
+
+
+@router.get("/low-stock", response_model=List[ProductResponse])
+def low_stock_products(
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    return (
+        db.query(Product)
+        .options(joinedload(Product.images))
+        .filter(
+            Product.is_active == True,
+            Product.stock <= Product.low_stock_threshold
+        )
+        .order_by(Product.stock.asc())
+        .all()
+    )
+
+
+
+
+@router.get("/{product_id}", response_model=ProductResponse)
 def get_product(
     product_id: int,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id
-    ).first()
+    product = (db.query(Product)
+    .options(joinedload(Product.images))
+    .filter(Product.id == product_id
+    ).first())
 
     if not product:
         raise HTTPException(
@@ -55,9 +81,6 @@ def create_product(
     db: Session = Depends(get_db),
     admin:User = Depends(get_current_admin)
 ):
-
-    image_result = upload_image(image.file)
-
     product = Product(
         name=name,
         brand=brand,
@@ -88,9 +111,10 @@ def create_product(
         display_order=index + 1
         )
 
-    db.add(product_image)
+        db.add(product_image)
 
     db.commit()
+    db.refresh(product)
     return product
 
 @router.put("/{product_id}",response_model=ProductResponse,)
@@ -159,6 +183,23 @@ def update_product(
     if low_stock_threshold is not None:
             product.low_stock_threshold = low_stock_threshold
     if images:
+        last_image = (
+            db.query(ProductImage)
+            .filter(ProductImage.product_id == product.id)
+        .order_by(ProductImage.display_order.desc())
+        .first())
+
+        next_display_order = (
+        last_image.display_order + 1
+        if last_image
+        else 1
+        )
+
+        existing_images = (
+            db.query(ProductImage)
+            .filter(ProductImage.product_id == product.id)
+            .count())
+
         for image in images:
             image_result = upload_image(image.file)
 
@@ -166,9 +207,14 @@ def update_product(
                 product_id=product.id,
                 image_url=image_result["url"],
                 image_public_id=image_result["public_id"],
-            )
+                is_main=(existing_images == 0),
+                display_order=next_display_order
+                )
 
             db.add(product_image)
+
+            existing_images += 1
+            next_display_order += 1
    
     db.commit()
     db.refresh(product)
@@ -193,9 +239,6 @@ def delete_product(
             detail="Product not found"
         )
 
-    if product.image_public_id:
-        delete_image(product.image_public_id)
-
     product.is_active = False
 
     db.commit()
@@ -204,17 +247,3 @@ def delete_product(
         "message": "Product deleted successfully"
     }
 
-@router.get("/low-stock")
-def low_stock_products(
-    db: Session = Depends(get_db),
-    admin: User = Depends(get_current_admin)
-):
-    return (
-        db.query(Product)
-        .filter(
-            Product.is_active == True,
-            Product.stock <= Product.low_stock_threshold
-        )
-        .order_by(Product.stock.asc())
-        .all()
-    )
