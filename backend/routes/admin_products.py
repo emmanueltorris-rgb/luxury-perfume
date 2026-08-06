@@ -42,9 +42,6 @@ def low_stock_products(
         .all()
     )
 
-
-
-
 @router.get("/{product_id}", response_model=ProductResponse)
 def get_product(
     product_id: int,
@@ -221,6 +218,115 @@ def update_product(
 
     return product
 
+@router.put("/{product_id}/images/{image_id}/main")
+def set_main_product_image(
+    product_id: int,
+    image_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    image = (
+        db.query(ProductImage)
+        .filter(
+            ProductImage.id == image_id,
+            ProductImage.product_id == product_id
+        )
+        .first()
+    )
+
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail="Product image not found"
+        )
+
+    # Remove main status from all images
+    db.query(ProductImage).filter(
+        ProductImage.product_id == product_id
+    ).update(
+        {ProductImage.is_main: False},
+        synchronize_session=False
+    )
+
+    # Make selected image the main image
+    image.is_main = True
+
+    db.commit()
+
+    return {
+        "message": "Main product image updated successfully"
+    }
+
+@router.delete("/{product_id}/images/{image_id}")
+def delete_product_image(
+    product_id: int,
+    image_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    image = (
+        db.query(ProductImage)
+        .filter(
+            ProductImage.id == image_id,
+            ProductImage.product_id == product_id
+        )
+        .first()
+    )
+
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail="Product image not found"
+        )
+
+    was_main = image.is_main
+
+    db.delete(image)
+    db.flush()
+
+    if was_main:
+        next_image = (
+            db.query(ProductImage)
+            .filter(
+                ProductImage.product_id == product_id
+            )
+            .order_by(ProductImage.display_order.asc())
+            .first()
+        )
+
+        if next_image:
+            next_image.is_main = True
+
+    db.commit()
+
+    return {
+        "message": "Product image deleted successfully"
+    }
+
+@router.put("/{product_id}/activate")
+def activate_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    product = db.query(Product).filter(
+        Product.id == product_id
+    ).first()
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    product.is_active = True
+
+    db.commit()
+    db.refresh(product)
+
+    return {
+        "message": "Product activated successfully"
+    }
 
 @router.delete("/{product_id}")
 def delete_product(
@@ -228,7 +334,6 @@ def delete_product(
     db: Session = Depends(get_db),
     admin:User = Depends(get_current_admin)
 ):
-
     product = db.query(Product).filter(
         Product.id == product_id
     ).first()

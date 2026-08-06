@@ -54,7 +54,10 @@ export default function AdminDashboard() {
             onFieldChange={productsApi.updateField}
             onSaveEdit={withToast(productsApi.saveEdit, 'Product updated')}
             onImageUpdate={withToast(productsApi.updateImage, 'Image updated')}
+            onDeleteImage={withToast(productsApi.deleteImage,'Image deleted')}
+            onSetMainImage={withToast(productsApi.setMainImage,'Main image updated')}
             onDelete={withToast(productsApi.deleteProduct, 'Product deleted')}
+            onActivate={withToast(productsApi.activateProduct, 'Product activated')}
           />
         )}
 
