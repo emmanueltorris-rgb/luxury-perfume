@@ -186,7 +186,7 @@ export default function ProductsView({
       description: e.target.value,
     })
   }
-  placeholder="Description"
+  placeholder="About the Fragrance"
   className="p-3 rounded-md text-[#2B1E19] md:col-span-2"
 />
 
@@ -211,7 +211,7 @@ export default function ProductsView({
       preview_description: e.target.value,
     })
   }
-  placeholder="Preview description"
+  placeholder="Fragrance Story"
   className="p-3 rounded-md text-[#2B1E19] md:col-span-2"
 />
 
