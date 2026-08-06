@@ -53,6 +53,38 @@ function authHeaders(token) {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
+export async function fetchAdminProducts({ token }) {
+  const response = await fetch(`${API_BASE}/admin/products/`, {
+    headers: authHeaders(token),
+  })
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.detail || 'Failed to load products'
+    )
+  }
+
+  return payload
+}
+
+
+export async function fetchLowStockProducts({ token }) {
+  const response = await fetch(`${API_BASE}/admin/products/low-stock`, {
+    headers: authHeaders(token),
+  })
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.detail || 'Failed to load low-stock products'
+    )
+  }
+
+  return payload
+}
 export async function adminCreateProduct({ token, fields }) {
   // fields is a FormData instance
   const response = await fetch(`${API_BASE}/admin/products/`, {
@@ -108,3 +140,77 @@ export async function updateOrderStatus({ token, orderId, status }) {
   if (!response.ok) throw new Error(payload?.detail || 'Failed to update status')
   return payload
 }
+
+export async function adminDeleteProductImage({
+  token,
+  productId,
+  imageId,
+}) {
+  const response = await fetch(
+    `${API_BASE}/admin/products/${productId}/images/${imageId}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(token),
+    }
+  )
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.detail || 'Failed to delete image'
+    )
+  }
+
+  return payload
+}
+
+
+export async function adminActivateProduct({
+  token,
+  productId,
+}) {
+  const response = await fetch(
+    `${API_BASE}/admin/products/${productId}/activate`,
+    {
+      method: 'PUT',
+      headers: authHeaders(token),
+    }
+  )
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.detail || 'Failed to activate product'
+    )
+  }
+
+  return payload
+}
+
+export async function adminSetMainProductImage({
+  token,
+  productId,
+  imageId,
+}) {
+  const response = await fetch(
+    `${API_BASE}/admin/products/${productId}/images/${imageId}/main`,
+    {
+      method: 'PUT',
+      headers: authHeaders(token),
+    }
+  )
+
+  const payload = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(
+      payload?.detail || 'Failed to set main image'
+    )
+  }
+
+  return payload
+}
+
+

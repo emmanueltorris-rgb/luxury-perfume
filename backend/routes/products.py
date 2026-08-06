@@ -35,7 +35,7 @@ class ProductResponse(BaseModel):
     last: Optional[str]
     scent_strength: Optional[str]
     best_for: Optional[str]
-
+    is_active: bool
     images: List[ProductImageResponse] = []
     class Config:
         from_attributes = True
