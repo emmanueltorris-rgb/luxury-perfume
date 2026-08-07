@@ -8,6 +8,8 @@ from backend.models.product import Product
 from backend.auth_utils import get_current_admin
 from backend.cloudinary import upload_image
 from backend.cloudinary import delete_image
+from datetime import datetime
+
 router = APIRouter(
     prefix="/api/v1/products",
     tags=["products"]
@@ -38,6 +40,7 @@ class ProductResponse(BaseModel):
     last: Optional[str]
     scent_strength: Optional[str]
     best_for: Optional[str]
+    created_at: Optional[datetime]
     is_active: bool
     images: List[ProductImageResponse] = []
     class Config:
