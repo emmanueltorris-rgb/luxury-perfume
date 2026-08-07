@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-
+import { calculateDiscountedPrice } from '../../lib/utils'
 export default function ProductsView({
   products,
   loading,
@@ -250,6 +250,53 @@ export default function ProductsView({
   placeholder="Best for"
   className="p-3 rounded-md text-[#2B1E19]"
 />
+{/* DISCOUNT TYPE */}
+
+<select
+  value={form.discount_type}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      discount_type: e.target.value,
+    })
+  }
+  className="p-3 rounded-md text-[#2B1E19]"
+>
+  <option value="none">
+    No Discount
+  </option>
+
+  <option value="percentage">
+    Percentage (%)
+  </option>
+
+  <option value="fixed">
+    Fixed Amount (KSh)
+  </option>
+</select>
+
+{/* DISCOUNT VALUE */}
+
+{form.discount_type !== 'none' && (
+  <input
+    type="number"
+    min="0"
+    step="0.01"
+    value={form.discount_value}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        discount_value: e.target.value,
+      })
+    }
+    placeholder={
+      form.discount_type === 'percentage'
+        ? 'Discount percentage e.g. 20'
+        : 'Discount amount e.g. 500'
+    }
+    className="p-3 rounded-md text-[#2B1E19]"
+  />
+)}
 
           <input
             type="file"
@@ -356,15 +403,43 @@ export default function ProductsView({
                         {product.brand}
                       </p>
                     </div>
+                      <div className="text-right">
+  {product.discount_active &&
+  product.discount_type !== 'none' &&
+  Number(product.discount_value) > 0 ? (
+    <>
+      <p className="text-xs line-through opacity-50">
+        KSh {Number(product.price).toLocaleString()}
+      </p>
 
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        KSh{' '}
-                        {Number(
-                          product.price
-                        ).toLocaleString()}
-                      </p>
-                    </div>
+      <p className="font-semibold text-green-600">
+        KSh{' '}
+        {calculateDiscountedPrice(
+          product.price,
+          product.discount_type,
+          product.discount_value,
+          product.discount_active
+        ).toLocaleString()}
+      </p>
+
+      <p className="text-xs font-semibold text-green-600">
+        {product.discount_type === 'percentage'
+          ? `${product.discount_value}% OFF`
+          : `KSh ${Number(
+              product.discount_value
+            ).toLocaleString()} OFF`}
+      </p>
+    </>
+  ) : (
+    <p className="font-semibold">
+      KSh{' '}
+      {Number(
+        product.price
+      ).toLocaleString()}
+    </p>
+  )}
+</div>
+                    
                   </div>
 
                   {/* PRODUCT SUMMARY */}
@@ -668,7 +743,59 @@ export default function ProductsView({
   placeholder="Best for"
   className="p-3 rounded-md text-[#2B1E19]"
 />
+{/* DISCOUNT TYPE */}
 
+<select
+  value={
+    editForms[product.id]?.discount_type ?? 'none'
+  }
+  onChange={(e) =>
+    onFieldChange(
+      product.id,
+      'discount_type',
+      e.target.value
+    )
+  }
+  className="p-3 rounded-md text-[#2B1E19]"
+>
+  <option value="none">
+    No Discount
+  </option>
+
+  <option value="percentage">
+    Percentage (%)
+  </option>
+
+  <option value="fixed">
+    Fixed Amount (KSh)
+  </option>
+</select>
+
+{/* DISCOUNT VALUE */}
+
+{editForms[product.id]?.discount_type !== 'none' && (
+  <input
+    type="number"
+    min="0"
+    step="0.01"
+    value={
+      editForms[product.id]?.discount_value ?? ''
+    }
+    onChange={(e) =>
+      onFieldChange(
+        product.id,
+        'discount_value',
+        e.target.value
+      )
+    }
+    placeholder={
+      editForms[product.id]?.discount_type === 'percentage'
+        ? 'Discount percentage e.g. 20'
+        : 'Discount amount e.g. 500'
+    }
+    className="p-3 rounded-md text-[#2B1E19]"
+  />
+)}
 <input
   type="number"
   value={

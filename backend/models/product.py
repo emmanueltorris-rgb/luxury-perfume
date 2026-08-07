@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, Text, DateTime
+from sqlalchemy import Column, Integer, String, Numeric, Boolean, Text, DateTime, Float
 from backend.database import Base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -21,6 +21,9 @@ class Product(Base):
     best_for = Column(String)
     low_stock_threshold = Column(Integer, default=5, nullable=False)
     is_active = Column(Boolean, default=True)
+    discount_type = Column(String, default="none", nullable=False)
+    discount_value = Column(Float, default=0, nullable=False)
+    discount_active = Column(Boolean, default=False, nullable=False) 
     created_at = Column(DateTime, server_default=func.now(),nullable=False)
     order_items = relationship("OrderItem", back_populates="product")
     cart_items = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
