@@ -28,6 +28,9 @@ class ProductResponse(BaseModel):
     brand: str
     description: Optional[str]
     price: float
+    discount_type: str
+    discount_value:float
+    discount_active:bool
     stock: int
     size_ml: Optional[int]
     category: Optional[str]

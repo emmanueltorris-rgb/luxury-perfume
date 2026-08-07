@@ -54,3 +54,34 @@ export function scrollToElement(elementId) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
+
+export function calculateDiscountedPrice(
+  price,
+  discountType,
+  discountValue,
+  discountActive
+) {
+  const originalPrice = Number(price) || 0
+  const value = Number(discountValue) || 0
+
+  if (!discountActive || discountType === 'none' || value <= 0) {
+    return originalPrice
+  }
+
+  if (discountType === 'percentage') {
+    const percentage = Math.min(value, 100)
+
+    return originalPrice - (
+      originalPrice * percentage / 100
+    )
+  }
+
+  if (discountType === 'fixed') {
+    return Math.max(
+      originalPrice - value,
+      0
+    )
+  }
+
+  return originalPrice
+}

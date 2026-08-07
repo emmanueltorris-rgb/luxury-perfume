@@ -30,9 +30,11 @@ export function useAdminProducts(token, showToast) {
         name: product.name ?? '',
         brand: product.brand ?? '',
         price: product.price ?? '',
+        discount_type: product.discount_type ?? 'none',
+        discount_value: product.discount_value ?? 0,
+        discount_active: product.discount_active ?? false,
         stock: product.stock ?? 0,
         category: product.category ?? '',
-
         description: product.description ?? '',
         size_ml: product.size_ml ?? '',
         preview_description: product.preview_description ?? '',
@@ -70,6 +72,9 @@ export function useAdminProducts(token, showToast) {
     fd.append('name', form.name)
     fd.append('brand', form.brand)
     fd.append('price', form.price)
+    fd.append('discount_type', form.discount_type || 'none')
+    fd.append('discount_value', form.discount_value || 0 )
+    fd.append('discount_active', form.discount_active !== 'none')
     fd.append('stock', form.stock || 0)
     fd.append('category', form.category || '')
 
@@ -92,9 +97,11 @@ export function useAdminProducts(token, showToast) {
       name: created.name ?? '',
       brand: created.brand ?? '',
       price: created.price ?? '',
+      discount_type: created.discount_type ?? 'none',
+      discount_value: created.discount_value ?? 0,
+      discount_active: created.discount_active ?? false,
       stock: created.stock ?? 0,
       category: created.category ?? '',
-
       description: created.description ?? '',
       size_ml: created.size_ml ?? '',
       preview_description: created.preview_description ?? '',

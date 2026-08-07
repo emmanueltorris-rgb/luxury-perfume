@@ -65,6 +65,9 @@ def create_product(
     name: str = Form(...),
     brand: str = Form(...),
     price: float = Form(...),
+    discount_type:str = Form("none"),
+    discount_value:float = Form(0),
+    discount_active:bool = Form(False),
     stock: int = Form(0),
     description: Optional[str] = Form(None),
     size_ml: Optional[int] = Form(None),
@@ -83,6 +86,9 @@ def create_product(
         brand=brand,
         description=description,
         price=price,
+        discount_type=discount_type,
+        discount_value=discount_value,
+        discount_active=discount_active,
         stock=stock,
         size_ml=size_ml,
         category=category,
@@ -120,6 +126,9 @@ def update_product(
     name: Optional[str] = Form(None),
     brand: Optional[str] = Form(None),
     price: Optional[float] = Form(None),
+    discount_type: Optional[str] = Form(None),
+    discount_value: Optional[float] = Form(None),
+    discount_active: Optional[bool] = Form(None),
     stock: Optional[int] = Form(None),
     description: Optional[str] = Form(None),
     size_ml: Optional[int] = Form(None),
@@ -153,6 +162,15 @@ def update_product(
 
     if price is not None:
         product.price = price
+
+    if discount_type is not None:
+        product.discount_type = discount_type
+
+    if discount_value is not None:
+        product.discount_value = discount_value
+
+    if discount_active is not None:
+        product.discount_active = discount_active
 
     if stock is not None:
         product.stock = stock
