@@ -1,114 +1,180 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import HeroProductShowcase from './HeroProductShowcase'
+import { useProducts } from '../hooks/useProducts'
 
 function HeroSection() {
+  const { products, isLoading, error } = useProducts()
+
+  const heroProducts = useMemo(() => {
+    if (!products || products.length === 0) {
+      return []
+    }
+
+    // 1. Products currently on discount
+    const discounted = products.filter(
+      (product) =>
+        product.discount_active &&
+        product.discount_type !== 'none' &&
+        Number(product.discount_value) > 0
+    )
+
+    // 2. Recently added products
+    const recent = [...products]
+      .filter((product) => product.created_at)
+      .sort(
+        (a, b) =>
+          new Date(b.created_at) - new Date(a.created_at)
+      )
+
+    // 3. Random products
+    const shuffled = [...products].sort(() => Math.random() - 0.5)
+
+    // Combine the different types
+    const combined = [
+      ...discounted,
+      ...recent,
+      ...shuffled,
+    ]
+
+    // Remove duplicates
+    const uniqueProducts = Array.from(
+      new Map(
+        combined.map((product) => [product.id, product])
+      ).values()
+    )
+
+    // Hero will rotate through up to 5 products
+    return uniqueProducts.slice(0, 5)
+  }, [products])
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+    <section className="relative overflow-hidden">
+
+      {/* ================================
+          AMBIENT BACKGROUND
+      ================================= */}
+
       <motion.div
-        className="absolute top-1/4 left-10 md:left-20 w-64 h-64 rounded-full opacity-20"
+        className="absolute top-1/4 left-10 md:left-20 w-72 h-72 rounded-full opacity-20 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%)',
+          background:
+            'radial-gradient(circle, rgba(212,175,55,0.35) 0%, transparent 70%)',
         }}
-        animate={{ y: [0, -30, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-10 md:right-20 w-48 h-48 rounded-full opacity-20"
-        style={{
-          background: 'radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%)',
+        animate={{
+          y: [0, -30, 0],
+          scale: [1, 1.1, 1],
         }}
-        animate={{ y: [0, 20, 0], scale: [1, 1.15, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
       />
 
-      <div className="container-luxury relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
+      <motion.div
+        className="absolute bottom-1/4 right-10 md:right-20 w-64 h-64 rounded-full opacity-20 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%)',
+        }}
+        animate={{
+          y: [0, 20, 0],
+          scale: [1, 1.15, 1],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
+      />
+
+      {/* ================================
+          BRAND INTRO
+      ================================= */}
+
+      <div className="relative z-10 pt-28 md:pt-36 pb-4">
+        <div className="container-luxury text-center">
+
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full liquid-glass mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full liquid-glass"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Sparkles className="w-4 h-4 text-luxury-gold" />
-            <span className="text-xs uppercase tracking-[0.2em] text-white/70">
-              Artisan Crafted in Nairobi
+            <span className="w-1.5 h-1.5 rounded-full bg-luxury-gold" />
+
+            <span className="text-xs uppercase tracking-[0.25em] text-white/60">
+              Arwaah Parfumerie
             </span>
           </motion.div>
 
           <motion.h1
-            className="heading-luxury-gold text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 leading-[0.95]"
-            initial={{ opacity: 0, y: 40 }}
+            className="mt-6 font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-white"
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
           >
-            Arwaah
-            <br />
-            <span className="font-serif italic text-white/90 text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-              Parfumerie
+            A fragrance for
+            <span className="block text-luxury-gold italic">
+              your story.
             </span>
           </motion.h1>
 
           <motion.p
-            className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light"
+            className="max-w-xl mx-auto mt-5 text-sm md:text-base text-white/50 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
-            Discover fragrances that transcend the ordinary. Each bottle is a masterpiece 
-            of rare ingredients, distilled for the discerning connoisseur.
+            Discover carefully selected fragrances crafted to
+            express individuality, elegance, and character.
           </motion.p>
 
-          <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <Link to="/products" className="btn-gold group">
-              <span className="flex items-center gap-2">
-                Explore Collection
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-            <Link to="/checkout" className="btn-glass">
-              Quick Purchase
-            </Link>
-          </motion.div>
-
-          <motion.div
-            className="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-          >
-            {[
-              { value: '12', label: 'Signature Scents' },
-              { value: '100%', label: 'Authentic Oils' },
-              { value: 'M-Pesa', label: 'Instant Checkout' },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="font-serif text-2xl md:text-3xl text-luxury-gold font-bold">
-                  {stat.value}
-                </div>
-                <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </div>
 
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-white/20 flex justify-center pt-2">
-          <div className="w-1 h-2 rounded-full bg-luxury-gold/60" />
+      {/* ================================
+          PRODUCT SHOWCASE
+      ================================= */}
+
+      <div className="relative z-10">
+
+        {isLoading && (
+          <div className="container-luxury py-20 text-center">
+            <p className="text-white/50">
+              Discovering your next signature scent...
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="container-luxury py-20 text-center">
+            <p className="text-white/50">
+              Unable to load our fragrances right now.
+            </p>
+          </div>
+        )}
+
+        {!isLoading && !error && heroProducts.length > 0 && (
+          <HeroProductShowcase products={heroProducts} />
+        )}
+
+      </div>
+
+      {/* ================================
+          FALLBACK
+      ================================= */}
+
+      {!isLoading && !error && heroProducts.length === 0 && (
+        <div className="container-luxury py-20 text-center">
+          <p className="text-white/50">
+            Our fragrance collection is being prepared.
+          </p>
         </div>
-      </motion.div>
+      )}
+
     </section>
   )
 }
