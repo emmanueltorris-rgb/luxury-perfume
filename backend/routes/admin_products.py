@@ -153,6 +153,42 @@ def update_product(
             status_code=404,
             detail="Product not found"
         )
+    # Validate discount
+    if discount_type is not None:
+        if discount_type not in ["none", "percentage", "fixed"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid discount type"
+            )
+
+    if discount_value is not None and discount_value < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Discount value cannot be negative"
+        )
+
+    if discount_type == "percentage":
+        if discount_value is not None and discount_value > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Percentage discount cannot exceed 100%"
+            )
+
+    if discount_type == "fixed":
+        if discount_value is not None and discount_value > product.price:
+            raise HTTPException(
+                status_code=400,
+                detail="Fixed discount cannot exceed product price"
+            )
+
+    if discount_type is not None:
+        product.discount_type = discount_type
+
+    if discount_value is not None:
+        product.discount_value = discount_value
+
+    if discount_active is not None:
+        product.discount_active = discount_active
 
     if name is not None:
         product.name = name
