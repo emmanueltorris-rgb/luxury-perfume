@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useCart } from '../context/CartContext'
-import { formatPrice } from '../lib/utils'
+import { formatPrice, calculateDiscountedPrice } from '../lib/utils'
 
 function ProductCard({ product, index }) {
   const { addItem } = useCart()
@@ -277,22 +277,60 @@ function ProductCard({ product, index }) {
               {/* ---------------------------------------------
                   PRICE
               --------------------------------------------- */}
+              <div>
 
-              <div className="flex items-end justify-between mb-3">
+  {product.discount_active &&
+  product.discount_type !== 'none' &&
+  Number(product.discount_value) > 0 ? (
+    <>
 
-                <div>
-                  <span className="font-serif text-xl text-luxury-gold font-bold whitespace-nowrap">
-                    {formatPrice(product.price)}
-                  </span>
+      {/* ORIGINAL PRICE */}
 
-                  <div className="text-[10px] text-white/30 mt-0.5">
-                    {product.size_ml
-                      ? `${product.size_ml}ml`
-                      : '100ml'}
-                  </div>
-                </div>
+      <p className="text-sm text-white/40 line-through">
+        {formatPrice(product.price)}
+      </p>
 
-              </div>
+      {/* DISCOUNTED PRICE */}
+
+      <p className="font-serif text-3xl font-bold text-luxury-gold whitespace-nowrap">
+        {formatPrice(
+          calculateDiscountedPrice(
+            product.price,
+            product.discount_type,
+            product.discount_value,
+            product.discount_active
+          )
+        )}
+      </p>
+
+      {/* DISCOUNT LABEL */}
+
+      <p className="text-xs font-semibold text-emerald-400 mt-1">
+        {product.discount_type === 'percentage'
+          ? `${product.discount_value}% OFF`
+          : `${formatPrice(
+              product.discount_value
+            )} OFF`}
+      </p>
+
+    </>
+  ) : (
+
+    /* NORMAL PRICE */
+
+    <p className="font-serif text-3xl font-bold text-luxury-gold whitespace-nowrap">
+      {formatPrice(product.price)}
+    </p>
+
+  )}
+
+  <p className="text-xs text-white/30 mt-1">
+    {product.size_ml
+      ? `${product.size_ml}ml`
+      : '100ml'}
+  </p>
+
+</div>
 
               {/* ---------------------------------------------
                   ACTION BUTTONS
@@ -674,21 +712,53 @@ function ProductCard({ product, index }) {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
                     {/* PRICE */}
+<div>
+  {product.discount_active &&
+  product.discount_type !== 'none' &&
+  Number(product.discount_value) > 0 ? (
+    <>
+      {/* ORIGINAL PRICE */}
 
-                    <div>
+      <p className="text-sm text-white/40 line-through">
+        {formatPrice(product.price)}
+      </p>
 
-                      <p className="font-serif text-3xl font-bold text-luxury-gold whitespace-nowrap">
-                        {formatPrice(product.price)}
-                      </p>
+      {/* DISCOUNTED PRICE */}
 
-                      <p className="text-xs text-white/30 mt-1">
-                        {product.size_ml
-                          ? `${product.size_ml}ml`
-                          : '100ml'}
-                      </p>
+      <p className="font-serif text-3xl font-bold text-luxury-gold whitespace-nowrap">
+        {formatPrice(
+          calculateDiscountedPrice(
+            product.price,
+            product.discount_type,
+            product.discount_value,
+            product.discount_active
+          )
+        )}
+      </p>
 
-                    </div>
+      {/* DISCOUNT LABEL */}
 
+      <p className="text-xs font-semibold text-emerald-400 mt-1">
+        {product.discount_type === 'percentage'
+          ? `${product.discount_value}% OFF`
+          : `${formatPrice(
+              product.discount_value
+            )} OFF`}
+      </p>
+    </>
+  ) : (
+    <p className="font-serif text-3xl font-bold text-luxury-gold whitespace-nowrap">
+      {formatPrice(product.price)}
+    </p>
+  )}
+
+  <p className="text-xs text-white/30 mt-1">
+    {product.size_ml
+      ? `${product.size_ml}ml`
+      : '100ml'}
+  </p>
+</div>
+                   
                     {/* ADD */}
 
                     <motion.button
