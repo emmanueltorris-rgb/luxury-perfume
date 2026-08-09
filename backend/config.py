@@ -1,7 +1,7 @@
 import os
 from functools import lru_cache
 from pathlib import Path
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
@@ -38,6 +38,19 @@ class Settings(BaseSettings):
         default=False,
         env="DEBUG"
     )
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug_mode(cls, value):
+        """Allow common deployment labels while preserving standard booleans."""
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "production", "prod"}:
+                return False
+            if normalized in {"development", "dev"}:
+                return True
+        return value
+
     CORS_ORIGINS: list = [
         "http://localhost:5173",
         "http://localhost:3000"
