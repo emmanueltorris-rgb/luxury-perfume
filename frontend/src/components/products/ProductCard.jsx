@@ -37,16 +37,18 @@ function ProductCard({ product, index }) {
   ]
   const imageUrls = uniqueImages.map(getImageUrl)
   const mainImage = imageUrls[0] || null
-  const handleAdd = () => {
-    addItem(product)
+  const handleAdd = async () => {
+    const addedToCart = await addItem(product)
+    if (!addedToCart) return
     setAdded(true)
     setTimeout(() => {
       setAdded(false)
     }, 2000)
   }
 
-  const handlePreviewAdd = () => {
-    addItem(product)
+  const handlePreviewAdd = async () => {
+    const addedToCart = await addItem(product)
+    if (!addedToCart) return
     setAdded(true)
     setTimeout(() => {
       setAdded(false)
