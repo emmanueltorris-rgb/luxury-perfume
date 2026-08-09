@@ -19,6 +19,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from backend.database import Base
+from backend.config import get_settings
 from backend.models.user import User
 from backend.models.product import Product
 from backend.models.order import Order
@@ -26,6 +27,10 @@ from backend.models.order_item import OrderItem
 from backend.models.admin import Admin
 
 target_metadata = Base.metadata
+
+# Keep migration commands pointed at the same database used by the API rather
+# than the development fallback stored in alembic.ini.
+config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
