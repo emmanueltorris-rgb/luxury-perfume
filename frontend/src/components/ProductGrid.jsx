@@ -405,9 +405,7 @@ function ProductGrid({ featuredOnly = false }) {
                 View all fragrances
               </button>
             )}
-
           </div>
-
         </motion.div>
       )}
 
