@@ -74,9 +74,24 @@ export function useAdminProducts(token, showToast) {
     fd.append('price', form.price)
     fd.append('discount_type', form.discount_type || 'none')
     fd.append('discount_value', form.discount_value || 0 )
-    fd.append('discount_active', form.discount_active !== 'none')
+    fd.append('discount_active', String(Boolean(form.discount_active)))
     fd.append('stock', form.stock || 0)
     fd.append('category', form.category || '')
+
+    // Send the optional fragrance details entered in the create form.
+    ;[
+      'description',
+      'size_ml',
+      'preview_description',
+      'last',
+      'scent_strength',
+      'best_for',
+    ].forEach((field) => {
+      const value = form[field]
+      if (value !== undefined && value !== null && value !== '') {
+        fd.append(field, value)
+      }
+    })
 
     // Backend expects "images"
     if (file) {
