@@ -1,15 +1,19 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CartProvider } from './context/CartContext'
+
 import Layout from './components/Layout'
+
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
-import AboutPage from './pages/AboutPage' // 1. Added AboutPage Import
+import ProductDetailPage from './pages/ProductDetailPage'
+import AboutPage from './pages/AboutPage'
 import CheckoutPage from './pages/CheckoutPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AdminDashboard from './pages/AdminDashboard'
+
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -26,18 +30,73 @@ function App() {
           transition={{ duration: 0.3 }}
         >
           <Routes location={location}>
+
             <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/about" element={<AboutPage />} /> {/* 2. Added Route for /about */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route element={<ProtectedRoute requireAdmin={true} redirectTo="/login" />}>
-                <Route path="/admin" element={<AdminDashboard />} />
+
+              {/* HOME */}
+              <Route
+                path="/"
+                element={<HomePage />}
+              />
+
+              {/* PRODUCTS */}
+              <Route
+                path="/products"
+                element={<ProductsPage />}
+              />
+
+              {/* PRODUCT DETAIL */}
+              <Route
+                path="/products/:productId"
+                element={<ProductDetailPage />}
+              />
+
+              {/* ABOUT */}
+              <Route
+                path="/about"
+                element={<AboutPage />}
+              />
+
+              {/* AUTH */}
+              <Route
+                path="/login"
+                element={<LoginPage />}
+              />
+
+              <Route
+                path="/signup"
+                element={<SignupPage />}
+              />
+
+              {/* ADMIN */}
+              <Route
+                element={
+                  <ProtectedRoute
+                    requireAdmin={true}
+                    redirectTo="/login"
+                  />
+                }
+              >
+                <Route
+                  path="/admin"
+                  element={<AdminDashboard />}
+                />
               </Route>
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="*" element={<NotFoundPage />} />
+
+              {/* CHECKOUT */}
+              <Route
+                path="/checkout"
+                element={<CheckoutPage />}
+              />
+
+              {/* 404 */}
+              <Route
+                path="*"
+                element={<NotFoundPage />}
+              />
+
             </Route>
+
           </Routes>
         </motion.div>
       </AnimatePresence>

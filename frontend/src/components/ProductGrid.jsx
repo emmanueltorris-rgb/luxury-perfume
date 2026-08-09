@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 
 import ProductCard from './products/ProductCard'
+import SearchBar from './SearchBar'
 import { useProducts } from '../hooks/useProducts'
 
 function ProductGrid({ featuredOnly = false }) {
@@ -14,14 +15,12 @@ function ProductGrid({ featuredOnly = false }) {
   } = useProducts()
 
   const [activeCategory, setActiveCategory] = useState('All')
+  const [searchQuery, setSearchQuery] = useState('')
 
   /*
    * ---------------------------------------------------------
    * FILTER CATEGORIES
    * ---------------------------------------------------------
-   *
-   * Always show All once.
-   * If the backend already returns "All", remove the duplicate.
    */
 
   const filterCategories = useMemo(() => {
@@ -42,6 +41,9 @@ function ProductGrid({ featuredOnly = false }) {
    * ---------------------------------------------------------
    * FILTER PRODUCTS
    * ---------------------------------------------------------
+   *
+   * Search and category filters work together.
+   * ---------------------------------------------------------
    */
 
   const filtered = useMemo(() => {
@@ -58,21 +60,50 @@ function ProductGrid({ featuredOnly = false }) {
     }
 
     /*
-     * Show everything
+     * Start with all products
      */
 
-    if (activeCategory === 'All') {
-      return products || []
+    let result = products || []
+
+    /*
+     * CATEGORY FILTER
+     */
+
+    if (activeCategory !== 'All') {
+      result = result.filter(
+        (product) =>
+          product.category === activeCategory
+      )
     }
 
     /*
-     * Filter by fragrance family
+     * SEARCH FILTER
      */
 
-    return (products || []).filter(
-      (product) =>
-        product.category === activeCategory
-    )
+    const query = searchQuery.trim().toLowerCase()
+
+    if (query) {
+      result = result.filter((product) => {
+
+        const searchableText = [
+          product.name,
+          product.brand,
+          product.category,
+          product.description,
+          product.preview_description,
+          product.scent_strength,
+          product.best_for,
+          product.last,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return searchableText.includes(query)
+      })
+    }
+
+    return result
   }, [
     activeCategory,
     error,
@@ -80,6 +111,7 @@ function ProductGrid({ featuredOnly = false }) {
     featuredProducts,
     isLoading,
     products,
+    searchQuery,
   ])
 
   /*
@@ -139,6 +171,37 @@ function ProductGrid({ featuredOnly = false }) {
 
   return (
     <div>
+
+      {/* =====================================================
+          SEARCH
+      ===================================================== */}
+
+      {!featuredOnly && (
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 15,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+          }}
+          transition={{
+            duration: 0.4,
+          }}
+        >
+
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search perfumes, brands, fragrance families..."
+          />
+
+        </motion.div>
+      )}
 
       {/* =====================================================
           CATEGORY FILTER
@@ -209,27 +272,33 @@ function ProductGrid({ featuredOnly = false }) {
       )}
 
       {/* =====================================================
-          PRODUCT COUNT
+          ACTIVE FILTER SUMMARY
       ===================================================== */}
 
       {!featuredOnly && (
-        <div className="mb-6">
+        <div className="mb-6 flex flex-wrap items-center gap-2">
 
           <p className="text-sm text-white/40">
-
             Showing{' '}
-
             <span className="text-white/70 font-medium">
               {filtered.length}
-            </span>
-
-            {' '}
-
+            </span>{' '}
             {filtered.length === 1
               ? 'fragrance'
               : 'fragrances'}
-
           </p>
+
+          {searchQuery.trim() && (
+            <span className="text-xs px-3 py-1 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 text-luxury-gold/80">
+              Search: "{searchQuery}"
+            </span>
+          )}
+
+          {activeCategory !== 'All' && (
+            <span className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/50">
+              {activeCategory}
+            </span>
+          )}
 
         </div>
       )}
@@ -304,9 +373,26 @@ function ProductGrid({ featuredOnly = false }) {
             </p>
 
             <p className="text-sm text-white/40">
-              No fragrances are currently available
-              for this selection.
+              {searchQuery.trim()
+                ? `We couldn't find any fragrances matching "${searchQuery}".`
+                : 'No fragrances are currently available for this selection.'}
             </p>
+
+            {/* RESET SEARCH */}
+
+            {searchQuery.trim() && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSearchQuery('')
+                }
+                className="mt-5 px-5 py-2 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-gold/30 transition-all text-sm"
+              >
+                Clear search
+              </button>
+            )}
+
+            {/* RESET CATEGORY */}
 
             {activeCategory !== 'All' && (
               <button
@@ -314,7 +400,7 @@ function ProductGrid({ featuredOnly = false }) {
                 onClick={() =>
                   setActiveCategory('All')
                 }
-                className="mt-5 px-5 py-2 rounded-full bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-gold/30 transition-all text-sm"
+                className="mt-5 ml-2 px-5 py-2 rounded-full bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white transition-all text-sm"
               >
                 View all fragrances
               </button>

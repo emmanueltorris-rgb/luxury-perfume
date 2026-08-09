@@ -24,6 +24,10 @@ export async function fetchProducts() {
   return fetchJson('/products')
 }
 
+export async function fetchProduct(productId) {
+  return fetchJson(`/products/${productId}`)
+}
+
 export async function initiateStkPush({ phone_number, amount, product_id }) {
   return fetchJson('/payments/stk-push', {
     method: 'POST',
