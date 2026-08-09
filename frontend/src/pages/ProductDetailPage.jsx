@@ -213,7 +213,10 @@ function ProductDetailPage() {
     setAddedToCart(false)
 
     try {
-      await addItem(product)
+      const addedToCart = await addItem(product)
+      if (!addedToCart) {
+        return
+      }
 
       setAddedToCart(true)
 

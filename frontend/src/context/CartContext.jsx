@@ -5,12 +5,14 @@ import {
   useCallback,
   useEffect,
 } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const { token } = useAuth();
 
   const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
@@ -44,11 +46,17 @@ export function CartProvider({ children }) {
     loadCart();
   }, [loadCart]);
 
+  useEffect(() => {
+    if (token) {
+      setShowAuthPrompt(false);
+    }
+  }, [token]);
+
   const addItem = useCallback(
     async (product) => {
       if (!token) {
-        console.warn("User is not logged in");
-        return;
+        setShowAuthPrompt(true);
+        return false;
       }
 
       try {
@@ -69,8 +77,10 @@ export function CartProvider({ children }) {
         }
 
         await loadCart();
+        return true;
       } catch (error) {
         console.error("Error adding item to cart:", error);
+        throw error;
       }
     },
     [token, API_URL, loadCart]
@@ -173,6 +183,50 @@ export function CartProvider({ children }) {
       }}
     >
       {children}
+      {showAuthPrompt && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-cart-title"
+        >
+          <div className="relative w-full max-w-md rounded-2xl border border-luxury-gold/30 bg-[#16100d] p-7 text-center shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setShowAuthPrompt(false)}
+              className="absolute right-4 top-3 text-2xl text-white/60 transition hover:text-white"
+              aria-label="Close sign-in prompt"
+            >
+              ×
+            </button>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-luxury-gold">
+              Your perfume cart
+            </p>
+            <h2 id="auth-cart-title" className="text-2xl font-semibold text-white">
+              Sign in to add items
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-white/65">
+              Create an account or log in to save this fragrance to your cart and continue to checkout.
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Link
+                to="/signup"
+                onClick={() => setShowAuthPrompt(false)}
+                className="rounded-lg bg-luxury-gold px-4 py-3 text-sm font-semibold text-[#1a120d] transition hover:bg-[#f4d18e]"
+              >
+                Create account
+              </Link>
+              <Link
+                to="/login"
+                onClick={() => setShowAuthPrompt(false)}
+                className="rounded-lg border border-white/20 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Log in
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </CartContext.Provider>
   );
 }
