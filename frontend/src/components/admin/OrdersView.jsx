@@ -11,14 +11,14 @@ export default function OrdersView({ orders, loading, onStatusChange }) {
       ) : (
         <div className="space-y-3">
           {orders.map((o) => (
-            <div key={o.id} className="liquid-glass p-4 flex items-center justify-between">
-              <div>
+            <div key={o.id} className="liquid-glass flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <div className="font-semibold">Order #{o.id}</div>
                 <div className="text-sm text-espresso/60">
                   Total: KES {parseFloat(o.total).toLocaleString()} • {new Date(o.created_at).toLocaleDateString()}
                 </div>
               </div>
-              <select value={o.status} onChange={(e) => onStatusChange(o.id, e.target.value)} className="p-2 rounded-md text-[#2B1E19]">
+              <select value={o.status} onChange={(e) => onStatusChange(o.id, e.target.value)} className="w-full rounded-md p-2 text-[#2B1E19] sm:w-auto">
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}

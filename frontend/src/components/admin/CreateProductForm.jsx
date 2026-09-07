@@ -56,14 +56,14 @@ export default function CreateProductForm({
   }
 
   return (
-    <div className="liquid-glass p-6 mb-8">
+    <div className="liquid-glass p-4 sm:p-6 mb-8">
       <h3 className="font-semibold text-xl mb-4">
         Create Product
       </h3>
 
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 gap-4 md:grid-cols-3"
       >
         {/* NAME */}
 
@@ -281,7 +281,7 @@ export default function CreateProductForm({
               e.target.files?.[0] || null
             )
           }
-          className="p-2 text-[#2B1E19]"
+          className="w-full min-w-0 p-2 text-sm text-[#2B1E19]"
           required
         />
 
@@ -289,7 +289,7 @@ export default function CreateProductForm({
 
         <div className="md:col-span-3">
           <button
-            className="btn-gold px-6 py-3"
+            className="btn-gold w-full px-6 py-3 sm:w-auto"
             type="submit"
           >
             Create Product

@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   }, [ordersApi.orders, productsApi.products])
 
   return (
-    <div className="container-luxury py-16 flex gap-8">
+    <div className="container-luxury py-8 sm:py-12 lg:py-16 flex flex-col gap-6 lg:flex-row lg:gap-8">
       <AdminSidebar activeView={activeView} onChange={setActiveView} />
 
       <main className="flex-1 min-w-0">

@@ -34,7 +34,7 @@ export default function ProductEditForm({
 
       {/* PRODUCT FIELDS */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
         {/* NAME */}
 
@@ -306,7 +306,7 @@ export default function ProductEditForm({
         <button
           type="button"
           onClick={handleSave}
-          className="btn-gold py-3"
+          className="btn-gold w-full py-3 md:w-auto"
         >
           Save Changes
         </button>
@@ -317,7 +317,7 @@ export default function ProductEditForm({
 
       <div className="mt-8">
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
           <div>
             <h4 className="font-semibold text-lg">
@@ -336,7 +336,7 @@ export default function ProductEditForm({
                 product.id
               ]?.click()
             }
-            className="btn-gold px-4 py-2 text-sm"
+            className="btn-gold w-full px-4 py-2 text-sm sm:w-auto"
           >
             + Add Image
           </button>

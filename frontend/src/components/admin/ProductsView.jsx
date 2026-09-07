@@ -47,7 +47,7 @@ export default function ProductsView({
 
       {/* HEADER */}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
         <div>
           <h2 className="heading-luxury text-3xl text-espresso">
@@ -59,7 +59,7 @@ export default function ProductsView({
           </p>
         </div>
 
-        <div className="text-sm opacity-70">
+        <div className="text-sm opacity-70 sm:text-right">
           {products.length} products
         </div>
 

@@ -78,8 +78,8 @@ export default function ProductCard({
       </div>
       {/* INFORMATION */}
       <div className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
             <h3 className="text-xl font-semibold text-espresso">
               {product.name}
             </h3>
@@ -91,7 +91,7 @@ export default function ProductCard({
 
           {/* PRICE */}
 
-          <div className="text-right">
+          <div className="text-left sm:text-right">
 
             {hasDiscount ? (
               <>
@@ -131,7 +131,7 @@ export default function ProductCard({
 
         {/* SUMMARY */}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 gap-3 mb-5 md:grid-cols-4">
 
           <div>
             <p className="text-xs opacity-60">
@@ -185,14 +185,14 @@ export default function ProductCard({
 
         {/* ACTIONS */}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:flex-wrap">
 
           <button
             type="button"
             onClick={() =>
               onToggleEdit(product.id)
             }
-            className="btn-gold flex-1 px-3 py-2 text-sm"
+            className="btn-gold w-full min-[420px]:flex-1 px-3 py-2 text-sm"
           >
             {isEditing
               ? 'Close'
@@ -206,7 +206,7 @@ export default function ProductCard({
                 product.id
               ]?.click()
             }
-            className="px-3 py-2 text-sm rounded-md border border-white/30 hover:bg-white/10"
+            className="w-full min-[420px]:w-auto px-3 py-2 text-sm rounded-md border border-white/30 hover:bg-white/10"
           >
             Add Images
           </button>
@@ -216,7 +216,7 @@ export default function ProductCard({
             onClick={() =>
               onDelete(product.id)
             }
-            className="px-3 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
+            className="w-full min-[420px]:w-auto px-3 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
           >
             Delete
           </button>
@@ -227,7 +227,7 @@ export default function ProductCard({
               onClick={() =>
                 onActivate(product.id)
               }
-              className="px-3 py-2 text-sm rounded-md bg-green-500 text-white hover:bg-green-600"
+              className="w-full min-[420px]:w-auto px-3 py-2 text-sm rounded-md bg-green-500 text-white hover:bg-green-600"
             >
               Activate
             </button>
