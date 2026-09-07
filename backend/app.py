@@ -31,14 +31,14 @@ app.add_middleware(
 async def startup():
     db = SessionLocal()
     try:
-        admin_email = "torrisemanuel@gmail.com"
+        admin_email = "abdulrazaqmahmud88@gmail.com"
         existing_admin = db.query(User).filter(User.email == admin_email).first()
         if not existing_admin:
             admin_user = User(
-                name="Torris Emanuel",
+                name="Abdulrazaq Mahmud",
                 email=admin_email,
-                phone="254708319101",
-                hashed_password=auth.hash_password("admin123"),
+                phone="254794145502",
+                hashed_password=auth.hash_password("Najib@806"),
                 role="admin",
                 is_active=True,
             )
