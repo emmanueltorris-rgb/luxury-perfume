@@ -18,14 +18,15 @@ class Settings(BaseSettings):
     MPESA_SHORTCODE: str = Field(default="174379", env="MPESA_SHORTCODE")
     MPESA_ENV: str = Field(default="sandbox", env="MPESA_ENV")
     MPESA_MOCK_MODE: bool = Field(default=False, env="MPESA_MOCK_MODE")
-    MPESA_CALLBACK_URL: str
+    MPESA_CALLBACK_URL: str = Field(..., env="MPESA_CALLBACK_URL")
     DATABASE_URL: str = Field(..., env="DATABASE_URL")
     SECRET_KEY: str = Field(..., env="SECRET_KEY")
     CLOUDINARY_CLOUD_NAME: str = Field(...,env="CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY: str = Field(..., env="CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET: str = Field(...,env="CLOUDINARY_API_SECRET")
-    RESEND_API_KEY: str
-    FROM_EMAIL: str
+    RESEND_API_KEY: str = Field(default="", env="RESEND_API_KEY")
+
+    FROM_EMAIL: str = Field(..., env="FROM_EMAIL")
     @property
     def BASE_URL(self) -> str:
         return (

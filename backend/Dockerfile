@@ -15,4 +15,4 @@ COPY backend ./backend
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && exec gunicorn backend.app:app --workers ${WEB_CONCURRENCY:-2} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --access-logfile - --error-logfile - --timeout 120"]
+CMD ["sh", "-c", "alembic upgrade head && exec gunicorn backend.app:app --workers ${WEB_CONCURRENCY:-2} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-10000} --access-logfile - --error-logfile - --timeout 120"]
