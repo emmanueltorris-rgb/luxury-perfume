@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY frontend ./
 
-ARG VITE_API_URL=http://localhost:8000/api/v1
+ARG VITE_API_URL=https://luxury-perfume-1-p5zv.onrender.com/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 

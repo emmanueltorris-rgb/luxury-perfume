@@ -164,7 +164,7 @@ function ProductDetailPage() {
     if (!url) return null
 
     if (url.startsWith('/static')) {
-      return `http://localhost:8000${url}`
+      return `https://luxury-perfume-1-p5zv.onrender.com${url}`
     }
 
     return url
